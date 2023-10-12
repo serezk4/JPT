@@ -89,9 +89,15 @@ public class THandler {
         try {
             int msgId = bot.sendMessage(update.getChatId(), "Обработка..").getMessageId();
             String answer= gptApi.query(Collections.singletonList("user: " +query), 0.7);
-            String answerHTML = String.format(template,answer);
-
             log.info("Query: {} | Answer: {}", query, answer);
+
+            if (answer.length() < 4096) {
+                bot.sendMessage(chatId, answer.replaceAll("<br/>", "\n"));
+                bot.deleteMessage(chatId, msgId);
+                return;
+            }
+
+            String answerHTML = String.format(template,answer);
 
             File tempFile = Files.createTempFile(UuidCreator.getRandomBasedFast().toString(), ".html").toFile();
             Files.write(Paths.get(tempFile.getPath()), Arrays.stream(answerHTML.split("\n")).toList(), StandardCharsets.UTF_8);
