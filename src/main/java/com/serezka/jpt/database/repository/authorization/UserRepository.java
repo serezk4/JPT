@@ -1,11 +1,13 @@
-package com.serezka.jpt.database.repository;
+package com.serezka.jpt.database.repository.authorization;
 
-import com.serezka.telegrambots.database.model.User;
+import com.serezka.jpt.database.model.authorization.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
+@Repository
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByUsername(String username);
     Optional<User> findByChatId(Long chatId);

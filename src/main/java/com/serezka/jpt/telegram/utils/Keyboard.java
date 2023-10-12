@@ -1,6 +1,7 @@
 package com.serezka.jpt.telegram.utils;
 
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
@@ -12,20 +13,40 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.Keyboard
 import org.telegram.telegrambots.meta.api.objects.webapp.WebAppInfo;
 
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 @Log4j2
 public class Keyboard {
-    public static final String delimiter = "|";
+    public static class Delimiter {
+        public static final String SERVICE = "$";
+        public static final String DATA = "*";
+    }
+
+    @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+    @Getter @AllArgsConstructor
+    public enum Actions {
+        CLOSE("Закрыть", "exit"), BACK("назад", "back");
+
+        String name;
+        String callback;
+    }
 
     public static class Reply {
         public static ReplyKeyboardMarkup getDefault() {
             return getCustomKeyboard(new String[][]{
-                    {/*todo*/}
+                    {"➕Добавить", "\uD83D\uDDC2\uFE0F Общая сумма"},
+                    {"\uD83D\uDCCA Курс","\uD83D\uDDD1\uFE0F Удалить последний", "\uD83E\uDDE8 Удалить всё"}
             });
         }
 
         public static ReplyKeyboardMarkup getCustomKeyboard(List<List<String>> buttonsText) {
+            return getCustomKeyboard(buttonsText, false);
+        }
+
+        public static ReplyKeyboardMarkup getCustomKeyboard(List<List<String>> buttonsText, boolean addButtons) {
+            if (addButtons) buttonsText.add(List.of(Actions.BACK.getName(), Actions.CLOSE.getName()));
             ReplyKeyboardMarkup replyKeyboard = new ReplyKeyboardMarkup(buttonsText.stream()
                     .map(row -> new KeyboardRow(
                             row.stream()
@@ -98,6 +119,20 @@ public class Keyboard {
 
 
     public static class Inline {
+        public static InlineKeyboardMarkup getStaticKeyboard(Button[][] buttonsData) {
+            List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+
+            Arrays.stream(buttonsData).forEach(row ->
+                    rows.add(Arrays.stream(row).
+                            filter(Objects::nonNull).
+                            map(Inline::getButton).
+                            toList()
+                    )
+            );
+
+            return new InlineKeyboardMarkup(rows);
+        }
+
         public static InlineKeyboardMarkup getResizableKeyboard(List<Button> buttonsData, int rowSize) {
             List<List<InlineKeyboardButton>> rows = new ArrayList<>();
             Queue<Button> buttonsQueue = new PriorityQueue<>(buttonsData);
@@ -114,21 +149,21 @@ public class Keyboard {
             return new InlineKeyboardMarkup(rows);
         }
 
-        private static InlineKeyboardButton getButton(String text, String callbackData, UUID uuid) {
-            InlineKeyboardButton tempInlineButton = new InlineKeyboardButton(uuid.toString() + delimiter + text);
-            tempInlineButton.setCallbackData(callbackData);
+        private static InlineKeyboardButton getButton(String text, String callbackData, long id) {
+            InlineKeyboardButton tempInlineButton = new InlineKeyboardButton(text);
+            tempInlineButton.setCallbackData(id + Delimiter.SERVICE + callbackData);
 
             return tempInlineButton;
         }
 
         private static InlineKeyboardButton getButton(Button button) {
             return button.getWebAppInfo() != null ?
-                    getButton(button.getText(), button.getWebAppInfo(), button.getUuid()) :
-                    getButton(button.getText(), button.getData(), button.getUuid());
+                    getButton(button.getText(), button.getWebAppInfo(), button.getId()) :
+                    getButton(button.getText(), String.join(Delimiter.SERVICE, button.getData()), button.getId());
         }
 
-        private static InlineKeyboardButton getButton(String text, WebAppInfo webAppInfo, UUID uuid) {
-            InlineKeyboardButton tempInlineButton = new InlineKeyboardButton(uuid.toString() + delimiter + text);
+        private static InlineKeyboardButton getButton(String text, WebAppInfo webAppInfo, long id) {
+            InlineKeyboardButton tempInlineButton = new InlineKeyboardButton(text);
             tempInlineButton.setWebApp(webAppInfo);
 
             return tempInlineButton;
@@ -138,20 +173,20 @@ public class Keyboard {
         @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
         public static class Button {
             String text;
-            String data;
-            UUID uuid;
+            List<String> data;
+            long id;
             WebAppInfo webAppInfo;
 
-            public Button(String text, String data, UUID uuid) {
+            public Button(String text, List<String> data, long id) {
                 this.text = text;
-                this.uuid = uuid;
+                this.id = id;
                 this.data = data;
                 this.webAppInfo = null;
             }
 
-            public Button(String text, WebAppInfo webAppInfo, UUID uuid) {
+            public Button(String text, WebAppInfo webAppInfo, long id) {
                 this.text = text;
-                this.uuid = uuid;
+                this.id = id;
                 this.webAppInfo = webAppInfo;
                 this.data = null;
             }

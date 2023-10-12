@@ -1,4 +1,4 @@
-package com.serezka.jpt.database.model;
+package com.serezka.jpt.database.model.authorization;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -10,19 +10,27 @@ import lombok.experimental.FieldDefaults;
 @Getter @Setter @ToString
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class User {
+    // user info
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
     @Column(name = "chat_id", unique = true)
     Long chatId;
-
     String username;
+    Role role = Role.DEFAULT;
 
-    Role role = Role.USER;
+    // user data
+    String name = "";
+    Integer priority = 0;
 
-    public static enum Role {
-        USER, ADMIN;
+    @AllArgsConstructor @Getter
+    @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+    public enum Role {
+        DEFAULT(0), ADMIN1(1);
+
+        int adminLvl;
     }
 
     public User(Long chatId, String username) {

@@ -1,14 +1,13 @@
-package com.serezka.jpt.database.service;
+package com.serezka.jpt.database.service.authorization;
 
-import com.serezka.telegrambots.database.model.User;
-import com.serezka.telegrambots.database.repository.UserRepository;
+import com.serezka.jpt.database.model.authorization.User;
+import com.serezka.jpt.database.repository.authorization.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 
-import javax.management.relation.Role;
 import java.util.List;
 import java.util.Optional;
 

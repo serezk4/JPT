@@ -1,7 +1,7 @@
 package com.serezka.jpt.telegram.bot;
 
-import com.serezka.telegrambots.telegram.utils.Keyboard;
-import com.serezka.telegrambots.telegram.utils.Send;
+import com.serezka.jpt.telegram.utils.Keyboard;
+import com.serezka.jpt.telegram.utils.Send;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -14,7 +14,6 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.methods.send.SendSticker;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
@@ -30,7 +29,8 @@ import java.io.Serializable;
 public class TBot extends TelegramLongPollingBot {
     String botUsername, botToken;
 
-    @NonFinal @Setter
+    @NonFinal
+    @Setter
     THandler tHandler;
 
     public TBot(@Value("${telegram.bot.username}") String botUsername,
@@ -43,7 +43,7 @@ public class TBot extends TelegramLongPollingBot {
 
     @Override
     public void onUpdateReceived(Update update) {
-        // todo
+        tHandler.process(this, new TUpdate(update));
     }
 
     // send stuff
@@ -80,9 +80,7 @@ public class TBot extends TelegramLongPollingBot {
         return execute(Send.message(chatId, text, replyKeyboard));
     }
 
-    public boolean deleteMessage(long chatId, int messageId) {
-        return execute(Send.delete(chatId, messageId));
-    }
+    public void deleteMessage(long chatId, int messageId) {execute(Send.delete(chatId, messageId));}
 
     public Message sendSticker(long chatId, String stickerId) {
         try {
@@ -94,4 +92,12 @@ public class TBot extends TelegramLongPollingBot {
     }
 
     // ...
+
+    // utils
+    public void deleteLastMessageFromUser(TUpdate update) {
+        if (update.isUserMessage() &&            // check if message from user
+                update.getQueryType() == TUpdate.QueryType.MESSAGE) {  // check if message is text
+            deleteMessage(update.getChatId(), update.getMessageId());
+        }
+    }
 }

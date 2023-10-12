@@ -31,7 +31,7 @@ public class TUpdate {
         MESSAGE, INLINE_QUERY, CHOSEN_INLINE_QUERY, CALLBACK_QUERY,
         EDITED_MESSAGE, CHANNEL_POST, EDITED_CHANNEL_POST, SHIPPING_QUERY,
         PRE_CHECKOUT_QUERY, POLL, POLL_ANSWER, CHAT_JOIN_REQUEST,
-        CHAT_MEMBER_UPDATED_MY, CHAT_MEMBER_UPDATED, /*unknown*/ UNKNOWN;
+        CHAT_MEMBER_UPDATED_MY, CHAT_MEMBER_UPDATED, UNKNOWN;
     }
 
     public enum Flag { // if needed add some fields todo
@@ -46,9 +46,7 @@ public class TUpdate {
         IS_AUTOMATIC_FORWARD, HAS_PROTECTED_CONTENT, WEB_APP_DATA, VIDEO_CHAT_STARTED, VIDEO_CHAT_ENDED,
         VIDE_CHAT_PARTICIPANTS_INVITED ,VIDEO_CHAT_SCHEDULED, IS_TOPIC_MESSAGE, FORUM_TOPIC_CREATED, FORUM_TOPIC_CLOSED,
         FORUM_TOPIC_REOPENED, FORUM_TOPIC_EDITED, GENERAL_FORUM_TOPIC_HIDDEN, GENERAL_FORUM_TOPIC_UNHIDDEN,
-        WRITE_ACCESS_ALLOWED, HAS_MEDIA_SPOILER, USER_SHARED, CHAT_SHARED;
-
-//        private final String flagName;
+        WRITE_ACCESS_ALLOWED, HAS_MEDIA_SPOILER, USER_SHARED, CHAT_SHARED, UNKNOWN;
     }
 
     // ~10.000 nano sec to process
@@ -59,9 +57,6 @@ public class TUpdate {
 
         if (queryType != QueryType.MESSAGE) return Collections.emptyList();
         final Message message = self.getMessage();
-
-//        System.out.println(message.getClass().getDeclaredMethod("hasText").invoke(message));
-        // it will be more time to load >>>!! 99000ns vs 10000ns todo
 
         List<Flag> flags = new ArrayList<>();
         if (message.hasText()) flags.add(Flag.TEXT);
@@ -129,6 +124,8 @@ public class TUpdate {
         if (message.getChatShared() != null) flags.add(Flag.CHAT_SHARED);
 
         messageFlags = flags;
+
+        if (messageFlags.isEmpty()) messageFlags.add(Flag.UNKNOWN);
         return messageFlags;
     }
 
@@ -154,7 +151,7 @@ public class TUpdate {
     public int getMessageId() {
         return switch (queryType) {
             case MESSAGE -> self.getMessage().getMessageId();
-            case CALLBACK_QUERY -> Integer.parseInt(self.getCallbackQuery().getInlineMessageId());
+            case CALLBACK_QUERY -> self.getCallbackQuery().getMessage().getMessageId();
             case CHOSEN_INLINE_QUERY -> Integer.parseInt(self.getChosenInlineQuery().getInlineMessageId());
             case EDITED_MESSAGE -> self.getEditedMessage().getMessageId();
             case CHANNEL_POST -> self.getChannelPost().getMessageId();
@@ -174,6 +171,15 @@ public class TUpdate {
             case CHAT_MEMBER_UPDATED_MY -> self.getMyChatMember().getChat().getId();
             case CHAT_MEMBER_UPDATED -> self.getChatMember().getChat().getId();
             default -> -1;
+        };
+    }
+
+    public boolean isUserMessage() {
+        return switch (queryType) {
+            case MESSAGE -> self.getMessage().isUserMessage();
+            case INLINE_QUERY -> !self.getInlineQuery().getFrom().getIsBot();
+            // TODO!!!!!! !! ! ! ! !
+            default -> false;
         };
     }
 

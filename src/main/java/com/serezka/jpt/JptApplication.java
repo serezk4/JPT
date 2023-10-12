@@ -8,14 +8,21 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import java.util.List;
+import com.serezka.jpt.telegram.bot.*;
+import org.telegram.telegrambots.meta.TelegramBotsApi;
+import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 
 
 @SpringBootApplication
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class JptApplication implements ApplicationRunner {
-    GPTApi gpt;
+    // bot stuff
+    final THandler tHandler;
+    final TBot tBot;
+
+    // commands
+    // ..
 
     public static void main(String[] args) {
         SpringApplication.run(JptApplication.class, args);
@@ -23,9 +30,10 @@ public class JptApplication implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
+        tBot.setTHandler(tHandler);
 
-        String r =gpt.query(List.of("2+2=5", "Почему?", "Сколько будет 2+3", "привет еще раз)", "сколько тебе лет?"), 0.7);
-        System.out.println(r);
+        TelegramBotsApi telegramBotsApi = new TelegramBotsApi(DefaultBotSession.class);
+        telegramBotsApi.registerBot(tBot);
     }
 
 }
