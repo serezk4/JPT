@@ -76,12 +76,13 @@ public class GPTApi {
     public class Root {
         String answer;
         String model;
-        int promptTokens;
+
         String promptPrice;
-        int completionTokens;
         String completionPrice;
-        int totalTokens;
         String totalPrice;
+        int promptTokens;
+        int completionTokens;
+        int totalTokens;
     }
 
     @AllArgsConstructor

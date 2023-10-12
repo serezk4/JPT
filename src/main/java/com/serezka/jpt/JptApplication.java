@@ -23,7 +23,8 @@ public class JptApplication implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        String r =gpt.query(List.of("Привет, что ты можешь?"), 0.7);
+
+        String r =gpt.query(List.of("2+2=5", "Почему?", "Сколько будет 2+3", "привет еще раз)", "сколько тебе лет?"), 0.7);
         System.out.println(r);
     }
 
