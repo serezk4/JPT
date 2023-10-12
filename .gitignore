@@ -17,6 +17,13 @@ bin/
 !**/src/main/**/bin/
 !**/src/test/**/bin/
 
+### Properties ###
+*.properties
+
+### Gradle ###
+gradlew.bat
+gradlew
+
 ### IntelliJ IDEA ###
 .idea
 *.iws

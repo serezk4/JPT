@@ -19,7 +19,6 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @Service
@@ -27,17 +26,22 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class GPTApi {
     Gson gson = new Gson();
+    String url;
 
-    public void query(List<String> messages, double temperature) throws IOException {
+    public GPTApi(@Value("${gpt.server}") String url) {
+        this.url = url;
+    }
+
+    public String query(List<String> messages, double temperature) throws IOException {
         Query query = new Query(messages.stream().map(Query.Message::new).toList(), temperature);
-        String qjson = gson.toJson(query);
-        HttpPost httpPost = getHttpPost("", getStringEntity(qjson));
+        HttpPost httpPost = getHttpPost(String.format("%s/getAnswer", url), getStringEntity(gson.toJson(query)));
 
         CloseableHttpClient httpClient = HttpClientBuilder.create().build();
         CloseableHttpResponse response = httpClient.execute(httpPost);
         String result = IOUtils.toString(response.getEntity().getContent(), Charset.defaultCharset());
+
         Root root = gson.fromJson(result, Root.class);
-        System.out.println(root.getAnswer());
+        return root.getAnswer();
     }
 
     @NotNull
@@ -50,6 +54,8 @@ public class GPTApi {
     @NotNull
     private static HttpPost getHttpPost(String url, StringEntity params) {
         HttpPost request = new HttpPost(url);
+
+        // -> add headers
         request.addHeader("Accept", "application/json, text/javascript, */*; q=0.01");
         request.addHeader("Accept-Language", "ru-RU,ru");
         request.addHeader("Connection", "keep-alive");
@@ -60,6 +66,8 @@ public class GPTApi {
         request.addHeader("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36");
         request.addHeader("X-Requested-With", "XMLHttpRequest");
         request.setEntity(params);
+        // -<
+
         return request;
     }
 
