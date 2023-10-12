@@ -64,7 +64,6 @@ public class StepSession extends Session {
         }
 
         // check if
-        System.out.println(steps.size());
         if (steps.isEmpty()) {
             command.execute(bot, update, getHistory());
             destroy(bot, update);

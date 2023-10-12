@@ -1,7 +1,5 @@
 package com.serezka.jpt;
 
-import com.serezka.jpt.api.GPTApi;
-import com.serezka.jpt.telegram.commands.user.Ask;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -23,7 +21,6 @@ public class JptApplication implements ApplicationRunner {
     TBot tBot;
 
     // commands
-    Ask ask;
     // ..
 
     public static void main(String[] args) {
@@ -32,8 +29,6 @@ public class JptApplication implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        tHandler.addCommand(ask);
-
         tBot.setTHandler(tHandler);
 
         TelegramBotsApi telegramBotsApi = new TelegramBotsApi(DefaultBotSession.class);

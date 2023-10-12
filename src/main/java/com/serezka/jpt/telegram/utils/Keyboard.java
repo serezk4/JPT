@@ -13,9 +13,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.Keyboard
 import org.telegram.telegrambots.meta.api.objects.webapp.WebAppInfo;
 
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 @Log4j2
 public class Keyboard {
@@ -36,8 +34,7 @@ public class Keyboard {
     public static class Reply {
         public static ReplyKeyboardMarkup getDefault() {
             return getCustomKeyboard(new String[][]{
-                    {"➕Добавить", "\uD83D\uDDC2\uFE0F Общая сумма"},
-                    {"\uD83D\uDCCA Курс","\uD83D\uDDD1\uFE0F Удалить последний", "\uD83E\uDDE8 Удалить всё"}
+                    {}
             });
         }
 
