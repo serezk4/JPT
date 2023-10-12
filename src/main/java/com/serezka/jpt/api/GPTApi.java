@@ -33,8 +33,12 @@ public class GPTApi {
     }
 
     public String query(List<String> messages, double temperature) throws IOException {
+        System.out.println(messages);
         Query query = new Query(messages.stream().map(Query.Message::new).toList(), temperature);
+        System.out.println(gson.toJson(query));
         HttpPost httpPost = getHttpPost(String.format("%s/getAnswer", url), getStringEntity(gson.toJson(query)));
+
+
 
         CloseableHttpClient httpClient = HttpClientBuilder.create().build();
         CloseableHttpResponse response = httpClient.execute(httpPost);
