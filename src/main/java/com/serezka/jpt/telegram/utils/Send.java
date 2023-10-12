@@ -20,6 +20,12 @@ public class Send {
         return deleteMessage;
     }
 
+    public static SendDocument document(Long chatId, InputFile file, int replyTo) {
+        SendDocument sendDocument = document(chatId, file);
+        sendDocument.setReplyToMessageId(replyTo);
+        return sendDocument;
+    }
+
     public static SendDocument document(Long chatId, InputFile file) {
         SendDocument sendDocument = new SendDocument();
         sendDocument.setChatId(String.valueOf(chatId));
@@ -60,6 +66,12 @@ public class Send {
         editMessageText.setDisableWebPagePreview(true);
 
         return editMessageText;
+    }
+
+    public static SendMessage message(Long chatId, String text, int replyTo) {
+        SendMessage sm = message(chatId, text);
+        sm.setReplyToMessageId(replyTo);
+        return sm;
     }
 
     public static SendMessage message(Long chatId, String text) {

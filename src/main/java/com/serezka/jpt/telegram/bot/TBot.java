@@ -43,7 +43,7 @@ public class TBot extends TelegramLongPollingBot {
 
     @Override
     public void onUpdateReceived(Update update) {
-        tHandler.process(this, new TUpdate(update));
+        new Thread(() -> tHandler.process(this, new TUpdate(update))).start();
     }
 
     // send stuff

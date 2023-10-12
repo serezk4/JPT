@@ -2,17 +2,12 @@ package com.serezka.jpt.telegram.bot;
 
 import com.github.f4b6a3.uuid.UuidCreator;
 import com.serezka.jpt.api.GPTApi;
-import com.serezka.jpt.database.model.authorization.User;
 import com.serezka.jpt.database.service.authorization.InviteCodeService;
 import com.serezka.jpt.database.service.authorization.UserService;
 import com.serezka.jpt.telegram.commands.Command;
 import com.serezka.jpt.telegram.sessions.manager.MenuManager;
 import com.serezka.jpt.telegram.sessions.manager.StepManager;
-
 import com.serezka.jpt.telegram.sessions.types.Session;
-import com.serezka.jpt.telegram.sessions.types.menu.MenuSession;
-import com.serezka.jpt.telegram.sessions.types.step.StepSession;
-import com.serezka.jpt.telegram.utils.Keyboard;
 import com.serezka.jpt.telegram.utils.Send;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -26,8 +21,10 @@ import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 @Log4j2
 @Controller
@@ -92,20 +89,20 @@ public class THandler {
             log.info("Query: {} | Answer: {}", query, answer);
 
             if (answer.length() < 4096) {
-                bot.sendMessage(chatId, answer.replaceAll("<br/>", "\n"));
+                bot.execute(Send.message(chatId, answer.replaceAll("<br/>", "\n"), update.getMessageId()));
                 bot.deleteMessage(chatId, msgId);
                 return;
             }
 
             String answerHTML = String.format(template,answer);
 
-            File tempFile = Files.createTempFile(UuidCreator.getRandomBasedFast().toString(), ".html").toFile();
+            File tempFile = Files.createTempFile("answer", ".html").toFile();
             Files.write(Paths.get(tempFile.getPath()), Arrays.stream(answerHTML.split("\n")).toList(), StandardCharsets.UTF_8);
 
             InputFile inputFile = new InputFile();
             inputFile.setMedia(tempFile);
 
-            bot.execute(Send.document(update.getChatId(), inputFile));
+            bot.execute(Send.document(update.getChatId(), inputFile, update.getMessageId()));
             bot.deleteMessage(chatId, msgId);
             tempFile.delete();
         } catch (Exception ex) {log.warn(ex.getMessage());}
