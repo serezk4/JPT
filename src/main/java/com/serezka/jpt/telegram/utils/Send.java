@@ -69,6 +69,16 @@ public class Send {
         return editMessageText;
     }
 
+    public static SendMessage messageWithoutParseMode(Long chatId, String text) {
+        SendMessage sm = new SendMessage();
+        sm.setChatId(String.valueOf(chatId));
+        sm.setText(text);
+        sm.setReplyMarkup(Keyboard.Reply.getDefault());
+        sm.setDisableWebPagePreview(true);
+
+        return sm;
+    }
+
     public static SendMessage message(Long chatId, String text) {
         SendMessage sm = new SendMessage();
         sm.setChatId(String.valueOf(chatId));

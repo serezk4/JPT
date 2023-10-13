@@ -23,7 +23,7 @@ public class Profile extends Command<MenuSession> {
     ProfilePage profilePage;
 
     public Profile(ProfilePage profilePage) {
-        super(List.of("Профиль"), "просмотр профиля", User.Role.DEFAULT.getAdminLvl());
+        super(List.of("\uD83D\uDCD1 Профиль"), "просмотр профиля", User.Role.DEFAULT.getAdminLvl());
 
         this.profilePage = profilePage;
     }
@@ -34,12 +34,12 @@ public class Profile extends Command<MenuSession> {
     }
 
     @Component
-    @FieldDefaults(level = AccessLevel.PRIVATE,makeFinal = true)
+    @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
     public static class ProfilePage extends Page {
         private static final String TEMPLATE = """
-                Username: %s
-                Queries count: %d
-                Info: %s
+                <b>Username:</b> <i>%s</i>
+                <b>Queries:</b> <i>%d</i>
+                ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
                 """;
 
         public ProfilePage(UserService userService, QueryService queryService) {
@@ -52,12 +52,8 @@ public class Profile extends Command<MenuSession> {
                     return new Data("Error: can't find user", new Button[][]{{new Button(Keyboard.Actions.CLOSE.getName(), Keyboard.Actions.CLOSE.getCallback())}});
                 User user = optionalUser.get();
 
-                String info="empty";
-
                 if (callback != null && callback.startsWith("temp/") && callback.matches("temp/[+-]\\d.\\d$")) {
                     double delta = Double.parseDouble(callback.substring("temp/".length()));
-
-                    info = String.format("temperature changed from %.1f to %.1f", user.getTemperature(), user.getTemperature() + delta);
                     user.setTemperature(user.getTemperature() + delta);
 
                     userService.save(user);
@@ -65,20 +61,23 @@ public class Profile extends Command<MenuSession> {
 
                 if (callback != null && callback.startsWith("chat/") && callback.matches("chat/[+-]1$")) {
                     int delta = Integer.parseInt(callback.substring("chat/".length()));
-
-                    info = String.format("chat changed from %d to %d", user.getChat(), user.getChat() + delta);
                     user.setChat(user.getChat() + delta);
 
                     userService.save(user);
                 }
 
-                return new Data(String.format(TEMPLATE, user.getUsername(), queryService.countAllByUserId(user.getId()),info)
+                return new Data(String.format(TEMPLATE, user.getUsername(), queryService.countAllByUserId(user.getId()))
                         , new Button[][]{
-                        {new Button(String.format("GPT temperature %.1f", user.getTemperature()) , "ignored")},
-                        {new Button("+0.1", "temp/+0.1", this), new Button("-0.1", "temp/-0.1",this)},
-                        {new Button(" ", "ignored")},
-                        {new Button("Chat", "ignored")},
-                        {new Button("+1", "chat/+1"), new Button("-1", "chat/-1")}
+                        {
+                                new Button("⬆️ +0.1", "temp/+0.1", this),
+                                new Button(String.format("\uD83C\uDF21️ Temp: %.1f", user.getTemperature()), "ignored"),
+                                new Button("⬇️ -0.1", "temp/-0.1", this)
+                        },
+                        {
+                                new Button("⬆️ +1", "chat/+1"),
+                                new Button("\uD83D\uDCAC Чат: " + user.getChat(), "ignored"),
+                                new Button("⬇️ -1", "chat/-1")
+                        }
                 });
             });
         }

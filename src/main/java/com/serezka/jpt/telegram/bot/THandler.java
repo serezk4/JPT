@@ -11,6 +11,7 @@ import com.serezka.jpt.telegram.sessions.types.Session;
 import com.serezka.jpt.telegram.sessions.types.menu.MenuSession;
 import com.serezka.jpt.telegram.sessions.types.step.StepSession;
 import com.serezka.jpt.telegram.utils.Keyboard;
+import com.serezka.jpt.telegram.utils.Send;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -88,7 +89,7 @@ public class THandler {
 
         Optional<Command<? extends Session>> optionalSelected = commands.stream().filter(command -> command.getNames().contains(text)).findFirst();
         if (optionalSelected.isEmpty()) {
-            bot.sendMessage(chatId, gptUtil.completeQuery(chatId, text, GPTUtil.Formatting.TEXT));
+            bot.execute(Send.messageWithoutParseMode(chatId, gptUtil.completeQuery(chatId, text, GPTUtil.Formatting.TEXT)));
             return;
         }
 

@@ -42,7 +42,7 @@ public class Keyboard {
 
         public static ReplyKeyboardMarkup getDefault(User.BotMode botMode) {
             return getCustomKeyboard(new String[][]{
-                    {"Профиль", "Github"},
+                    {"\uD83D\uDCD1 Профиль", "\uD83D\uDCDC Github"},
             });
 
         }
