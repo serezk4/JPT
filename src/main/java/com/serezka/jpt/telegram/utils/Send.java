@@ -78,7 +78,7 @@ public class Send {
         SendMessage sm = new SendMessage();
         sm.setChatId(String.valueOf(chatId));
         sm.setText(text);
-        sm.setParseMode(ParseMode.HTML);
+        //sm.setParseMode(ParseMode.HTML);
         sm.setReplyMarkup(Keyboard.Reply.getDefault());
         sm.setDisableWebPagePreview(true);
 
