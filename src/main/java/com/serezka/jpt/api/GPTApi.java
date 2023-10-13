@@ -29,6 +29,26 @@ public class GPTApi {
     Gson gson = new Gson();
     String url;
 
+    public static final String template = """
+            <!DOCTYPE html>
+            <html lang="en">
+              <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <meta http-equiv="X-UA-Compatible" content="ie=edge">
+                <title>My Website</title>
+                <link rel="stylesheet" href="./style.css">
+                <link rel="icon" href="./favicon.ico" type="image/x-icon">
+              </head>
+              <body>
+                <main>
+                    <h1>Answer:</h1> \s
+                    <a>%s</a>
+                </main>
+              </body>
+            </html>
+            """;
+
     public GPTApi(@Value("${gpt.server}") String url) {
         this.url = url;
     }
