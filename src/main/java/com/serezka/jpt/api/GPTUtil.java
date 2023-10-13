@@ -65,7 +65,7 @@ public class GPTUtil {
                 .toList());
         queries.add("user: " + query);
 
-        String answer = new String(gptApi.query(queries, user.getTemperature()).getBytes(), StandardCharsets.UTF_8);
+        String answer = gptApi.query(queries, user.getTemperature());
 
         log.info("Query: {} | Answer: {}", query, answer);
         queryService.save(new Query(user.getId(), user.getChat(), query, !answer.isEmpty()));

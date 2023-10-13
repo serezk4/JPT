@@ -20,6 +20,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Controller;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -59,16 +60,17 @@ public class THandler {
         // -> collect data
         long chatId = update.getChatId();
         String username = update.getUsername();
-        String text = update.getText();
+        String text = new String(update.getText().getBytes(), StandardCharsets.UTF_8);
         TUpdate.QueryType queryType = update.getQueryType();
 
         log.info(String.format("New Message: chatId[%s] username[%s] message[%s] | QType: %s", chatId, username, text, queryType.toString()));
 
         // -> get user from database
-        if (!userService.existsByUsernameOrChatId(username, chatId) && !inviteCodeService.existsByCode(text)) {
-            bot.sendMessage(chatId, "Access denied");
-            return;
-        }
+        // TODO: 10/13/23 temp 
+//        if (!userService.existsByUsernameOrChatId(username, chatId) && !inviteCodeService.existsByCode(text)) {
+//            bot.sendMessage(chatId, "Access denied");
+//            return;
+//        }
 
         Optional<User> optionalUser = userService.existsByChatId(chatId) ? userService.findByChatId(chatId) : userService.save(new User(chatId, username));
         if (optionalUser.isEmpty()) {
