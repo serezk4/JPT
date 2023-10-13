@@ -13,13 +13,12 @@ import java.util.Arrays;
 import java.util.List;
 
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @AllArgsConstructor
-@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Getter
+@Setter
 public class Page {
     // pages data
-    @NonFinal
-    @Setter
     Page root = null;
     Function<TBot, TUpdate, String, Page, Data> generator;
 
@@ -49,7 +48,7 @@ public class Page {
                         .toList().toArray(new Keyboard.Inline.Button[0]);
             }
 
-            transferred[transferred.length - 1] = new Keyboard.Inline.Button[] {
+            transferred[transferred.length - 1] = new Keyboard.Inline.Button[]{
                     new Button(Keyboard.Actions.BACK.getName(), Keyboard.Actions.BACK.getCallback()).transfer(sessionId),
                     new Button(Keyboard.Actions.CLOSE.getName(), Keyboard.Actions.CLOSE.getCallback()).transfer(sessionId)
             };

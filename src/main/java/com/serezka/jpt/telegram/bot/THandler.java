@@ -81,7 +81,7 @@ public class THandler {
             return;
         }
 
-        if (menuManager.containsSession(chatId) && text.split("\\" + Keyboard.Delimiter.SERVICE)[1].matches("\\d+")) {
+        if (menuManager.containsSession(chatId) && update.getSelf().hasCallbackQuery() && text.split("\\" + Keyboard.Delimiter.SERVICE)[1].matches("\\d+")) {
             menuManager.getSession(chatId, Long.parseLong(text.split("\\" + Keyboard.Delimiter.SERVICE)[1])).ifPresent(menuSession -> menuSession.next(bot, update));
             return;
         }

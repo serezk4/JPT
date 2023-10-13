@@ -36,4 +36,9 @@ public class QueryService {
     public List<Query> findAllByUserIdAndChat(Long userId, Long chat) {
         return queryRepo.findAllByUserIdAndChat(userId, chat);
     }
+
+    @Transactional
+    public long countAllByUserId(Long userId) {
+        return queryRepo.countAllByUserId(userId);
+    }
 }

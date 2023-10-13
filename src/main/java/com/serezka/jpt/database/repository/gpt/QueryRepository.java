@@ -11,4 +11,6 @@ public interface QueryRepository  extends JpaRepository<Query, Long> {
     List<Query> findAllByUserId(Long userId);
 
     List<Query> findAllByUserIdAndChat(Long userId, Long chatId);
+
+    long countAllByUserId(Long userId);
 }

@@ -1,6 +1,6 @@
 package com.serezka.jpt;
 
-import com.serezka.jpt.telegram.commands.user.AskGpt;
+import com.serezka.jpt.telegram.commands.user.Profile;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -22,7 +22,7 @@ public class JptApplication implements ApplicationRunner {
     TBot tBot;
 
     // commands
-    AskGpt askGpt;
+    Profile profile;
     // ..
 
     public static void main(String[] args) {
@@ -31,7 +31,7 @@ public class JptApplication implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        tHandler.addCommand(askGpt);
+        tHandler.addCommand(profile);
 
         tBot.setTHandler(tHandler);
 
