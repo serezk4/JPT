@@ -10,7 +10,6 @@ import com.serezka.jpt.telegram.sessions.types.menu.MenuSession;
 import com.serezka.jpt.telegram.sessions.types.menu.Page;
 import com.serezka.jpt.telegram.utils.Keyboard;
 import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Component;
 

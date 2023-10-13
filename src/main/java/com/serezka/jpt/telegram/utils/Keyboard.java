@@ -14,9 +14,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.Keyboard
 import org.telegram.telegrambots.meta.api.objects.webapp.WebAppInfo;
 
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 @Log4j2
 public class Keyboard {

@@ -11,6 +11,7 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -64,12 +65,10 @@ public class GPTUtil {
                 .toList());
         queries.add("user: " + query);
 
-        System.out.println(queries);
-
-        String answer = gptApi.query(queries, user.getTemperature());
+        String answer = new String(gptApi.query(queries, user.getTemperature()).getBytes(), StandardCharsets.UTF_8);
 
         log.info("Query: {} | Answer: {}", query, answer);
-        queryService.save(new Query(user.getId(), user.getChat(), query, answer.substring(0,10)));
+        queryService.save(new Query(user.getId(), user.getChat(), query, !answer.isEmpty()));
 
         return switch (formatting) {
             case TEXT -> answer.replaceAll("<br/>", "\n");

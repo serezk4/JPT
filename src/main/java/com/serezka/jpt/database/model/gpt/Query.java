@@ -23,13 +23,13 @@ public class Query {
     Long chat;
     LocalDate date;
     String query;
-    String answer;
+    boolean ok;
 
-    public Query(Long userId, Long chat, String query, String answer) {
+    public Query(Long userId, Long chat, String query, boolean ok) {
         this.userId = userId;
         this.chat = chat;
         this.date = LocalDate.now();
         this.query = query;
-        this.answer = answer;
+        this.ok = ok;
     }
 }
