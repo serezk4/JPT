@@ -19,7 +19,6 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @Service
@@ -28,6 +27,8 @@ import java.util.List;
 public class GPTApi {
     Gson gson = new Gson();
     String url;
+
+
 
     public GPTApi(@Value("${gpt.server}") String url) {
         this.url = url;

@@ -7,30 +7,46 @@ import lombok.experimental.FieldDefaults;
 @Entity
 @Table(name = "users")
 @NoArgsConstructor
-@Getter @Setter @ToString
+@Getter
+@Setter
+@ToString
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class User {
-    // user info
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
+    // -> basic user data
     @Column(name = "chat_id", unique = true)
     Long chatId;
     String username;
+    // <
+
+    // -> bot settings for user
     Role role = Role.DEFAULT;
+    // <
 
-    // user data
-    String name = "";
-    Integer priority = 0;
+    // -> gpt settings for user
+    Double temperature = 0.5;
+    Long chat = 0L;
+    // <
 
-    @AllArgsConstructor @Getter
+    @AllArgsConstructor
+    @Getter
     @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
     public enum Role {
         DEFAULT(0), ADMIN1(1);
 
         int adminLvl;
+    }
+
+    @AllArgsConstructor
+    @Getter
+    @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+    public enum BotMode {
+        ONLY_GPT("только чат"), COMMANDS("команды");
+
+        String name;
     }
 
     public User(Long chatId, String username) {
