@@ -41,17 +41,10 @@ public class Keyboard {
         }
 
         public static ReplyKeyboardMarkup getDefault(User.BotMode botMode) {
-            return switch (botMode) {
-                case ONLY_GPT -> getCustomKeyboard(new String[][]{
-                        // TODO: 10/13/23
-                        {"Запрос", "Профиль"},
-                        {String.format("сменить на [%s]", User.BotMode.ONLY_GPT)}
-                });
-                case COMMANDS -> getCustomKeyboard(new String[][]{
-                        {String.format("сменить на [%s]", User.BotMode.COMMANDS)}
-                });
-                case null -> new ReplyKeyboardMarkup();
-            };
+            return getCustomKeyboard(new String[][]{
+                    {"Профиль", "Github"},
+            });
+
         }
 
         public static ReplyKeyboardMarkup getCustomKeyboard(List<List<String>> buttonsText) {

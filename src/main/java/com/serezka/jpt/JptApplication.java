@@ -1,5 +1,6 @@
 package com.serezka.jpt;
 
+import com.serezka.jpt.telegram.commands.user.Github;
 import com.serezka.jpt.telegram.commands.user.Profile;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +24,7 @@ public class JptApplication implements ApplicationRunner {
 
     // commands
     Profile profile;
+    Github github;
     // ..
 
     public static void main(String[] args) {
@@ -32,6 +34,7 @@ public class JptApplication implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) throws Exception {
         tHandler.addCommand(profile);
+        tHandler.addCommand(github);
 
         tBot.setTHandler(tHandler);
 

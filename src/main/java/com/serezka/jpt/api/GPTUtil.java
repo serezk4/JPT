@@ -69,7 +69,7 @@ public class GPTUtil {
         String answer = gptApi.query(queries, user.getTemperature());
 
         log.info("Query: {} | Answer: {}", query, answer);
-        queryService.save(new Query(user.getId(), user.getChat(), query, answer));
+        queryService.save(new Query(user.getId(), user.getChat(), query, answer.substring(0,10)));
 
         return switch (formatting) {
             case TEXT -> answer.replaceAll("<br/>", "\n");
