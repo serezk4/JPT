@@ -1,5 +1,6 @@
 package com.serezka.jpt.telegram.bot;
 
+import com.serezka.jpt.api.GPTUtil;
 import com.serezka.jpt.database.model.authorization.User;
 import com.serezka.jpt.database.service.authorization.InviteCodeService;
 import com.serezka.jpt.database.service.authorization.UserService;
@@ -13,6 +14,7 @@ import com.serezka.jpt.telegram.utils.Keyboard;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Controller;
@@ -27,14 +29,15 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class THandler {
-
     // handler per-init settings
-    @Getter
-    List<Command<? extends Session>> commands = new ArrayList<>();
+    @Getter List<Command<? extends Session>> commands = new ArrayList<>();
 
     // database services
     UserService userService;
     InviteCodeService inviteCodeService;
+
+    // gpt services
+    GPTUtil gptUtil;
 
     // session services
     MenuManager menuManager = MenuManager.getInstance();
@@ -44,6 +47,7 @@ public class THandler {
         commands.add(command);
     }
 
+    @SneakyThrows
     public void process(TBot bot, TUpdate update) {
         // -> validate query
         if (!TSettings.availableQueryTypes.contains(update.getQueryType())) {
@@ -84,7 +88,7 @@ public class THandler {
 
         Optional<Command<? extends Session>> optionalSelected = commands.stream().filter(command -> command.getNames().contains(text)).findFirst();
         if (optionalSelected.isEmpty()) {
-            bot.sendMessage(chatId, getHelp(user.getRole().getAdminLvl()));
+            bot.sendMessage(chatId, gptUtil.completeQuery(chatId, text, GPTUtil.Formatting.TEXT));
             return;
         }
 

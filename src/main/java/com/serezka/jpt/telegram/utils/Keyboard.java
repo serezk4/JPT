@@ -1,5 +1,6 @@
 package com.serezka.jpt.telegram.utils;
 
+import com.serezka.jpt.database.model.authorization.User;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -13,7 +14,9 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.Keyboard
 import org.telegram.telegrambots.meta.api.objects.webapp.WebAppInfo;
 
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 @Log4j2
 public class Keyboard {
@@ -23,7 +26,8 @@ public class Keyboard {
     }
 
     @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-    @Getter @AllArgsConstructor
+    @Getter
+    @AllArgsConstructor
     public enum Actions {
         CLOSE("Закрыть", "exit"), BACK("назад", "back");
 
@@ -33,9 +37,21 @@ public class Keyboard {
 
     public static class Reply {
         public static ReplyKeyboardMarkup getDefault() {
-            return getCustomKeyboard(new String[][]{
-                    {}
-            });
+            return getDefault(User.BotMode.COMMANDS);
+        }
+
+        public static ReplyKeyboardMarkup getDefault(User.BotMode botMode) {
+            return switch (botMode) {
+                case ONLY_GPT -> getCustomKeyboard(new String[][]{
+                        // TODO: 10/13/23
+                        {"Запрос", "Профиль"},
+                        {String.format("сменить на [%s]", User.BotMode.ONLY_GPT)}
+                });
+                case COMMANDS -> getCustomKeyboard(new String[][]{
+                        {String.format("сменить на [%s]", User.BotMode.COMMANDS)}
+                });
+                case null -> new ReplyKeyboardMarkup();
+            };
         }
 
         public static ReplyKeyboardMarkup getCustomKeyboard(List<List<String>> buttonsText) {

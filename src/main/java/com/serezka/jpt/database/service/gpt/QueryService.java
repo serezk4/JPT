@@ -6,7 +6,7 @@ import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.jvnet.hk2.annotations.Service;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
@@ -30,5 +30,10 @@ public class QueryService {
     @Transactional
     public Optional<Query> findById(Long queryId) {
         return queryRepo.findById(queryId);
+    }
+
+    @Transactional
+    public List<Query> findAllByUserIdAndChat(Long userId, Long chat) {
+        return queryRepo.findAllByUserIdAndChat(userId, chat);
     }
 }

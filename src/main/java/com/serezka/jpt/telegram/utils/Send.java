@@ -21,8 +21,9 @@ public class Send {
     }
 
     public static SendDocument document(Long chatId, InputFile file, int replyTo) {
-        SendDocument sendDocument = document(chatId, file);
+        SendDocument sendDocument = document(chatId,file);
         sendDocument.setReplyToMessageId(replyTo);
+
         return sendDocument;
     }
 
@@ -68,19 +69,20 @@ public class Send {
         return editMessageText;
     }
 
-    public static SendMessage message(Long chatId, String text, int replyTo) {
-        SendMessage sm = message(chatId, text);
-        sm.setReplyToMessageId(replyTo);
-        return sm;
-    }
-
     public static SendMessage message(Long chatId, String text) {
         SendMessage sm = new SendMessage();
         sm.setChatId(String.valueOf(chatId));
         sm.setText(text);
-        //sm.setParseMode(ParseMode.HTML);
+        sm.setParseMode(ParseMode.HTML);
         sm.setReplyMarkup(Keyboard.Reply.getDefault());
         sm.setDisableWebPagePreview(true);
+
+        return sm;
+    }
+
+    public static SendMessage message(Long chatId, String text, int replyTo) {
+        SendMessage sm = message(chatId,text);
+        sm.setReplyToMessageId(replyTo);
 
         return sm;
     }

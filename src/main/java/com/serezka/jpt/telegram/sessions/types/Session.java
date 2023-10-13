@@ -27,6 +27,6 @@ public abstract class Session implements Serializable {
     private boolean created;
 
     // generate answer
-    public abstract void next(TBot bot, TUpdate update);
-    public abstract void destroy(TBot bot, TUpdate update);
+    public void next(TBot bot, TUpdate update){};
+    public void destroy(TBot bot, TUpdate update){};
 }

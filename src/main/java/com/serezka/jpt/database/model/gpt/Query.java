@@ -9,21 +9,26 @@ import java.time.LocalDate;
 @Entity
 @Table(name = "queries")
 @NoArgsConstructor
-@Getter @Setter @ToString
+@Getter
+@Setter
+@ToString
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Query {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
+    @Column(name = "user_id")
     Long userId;
+    Long chat;
     LocalDate date;
     String query;
     String answer;
 
-    public Query(Long userId, LocalDate date, String query, String answer) {
+    public Query(Long userId, Long chat, String query, String answer) {
         this.userId = userId;
-        this.date = date;
+        this.chat = chat;
+        this.date = LocalDate.now();
         this.query = query;
         this.answer = answer;
     }
