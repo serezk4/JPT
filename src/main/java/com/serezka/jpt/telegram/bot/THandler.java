@@ -80,11 +80,10 @@ public class THandler {
         log.info(String.format("New Message: chatId[%s] username[%s] message[%s] | QType: %s", chatId, username, text, queryType.toString()));
 
         // -> get user from database
-        // TODO: 10/13/23 temp 
-//        if (!userService.existsByUsernameOrChatId(username, chatId) && !inviteCodeService.existsByCode(text)) {
-//            bot.sendMessage(chatId, "Access denied");
-//            return;
-//        }
+        if (!userService.existsByUsernameOrChatId(username, chatId) && !inviteCodeService.existsByCode(text)) {
+            bot.sendMessage(chatId, "Access denied");
+            return;
+        }
 
         Optional<User> optionalUser = userService.existsByChatId(chatId) ? userService.findByChatId(chatId) : userService.save(new User(chatId, username));
         if (optionalUser.isEmpty()) {
