@@ -44,10 +44,20 @@ public class Send {
         return sendPhoto;
     }
 
+    public static EditMessageText editWithoutParseMode(Long chatId, int messageId, String text) {
+        EditMessageText editMessageText = new EditMessageText();
+        editMessageText.setChatId(String.valueOf(chatId));
+        editMessageText.setMessageId(messageId);
+        editMessageText.setText(text);
+        editMessageText.setDisableWebPagePreview(true);
+
+        return editMessageText;
+    }
+
     public static EditMessageText edit(Long chatId, int messageId) {
         EditMessageText editMessageText = new EditMessageText();
-        editMessageText.setMessageId(messageId);
         editMessageText.setChatId(String.valueOf(chatId));
+        editMessageText.setMessageId(messageId);
         editMessageText.setParseMode(ParseMode.HTML);
         editMessageText.setDisableWebPagePreview(true);
 
@@ -73,6 +83,18 @@ public class Send {
         SendMessage sm = new SendMessage();
         sm.setChatId(String.valueOf(chatId));
         sm.setText(text);
+        sm.setReplyMarkup(Keyboard.Reply.getDefault());
+        sm.setDisableWebPagePreview(true);
+
+        return sm;
+    }
+
+    public static SendMessage message(Long chatId, String text, String parseMode, int replyTo) {
+        SendMessage sm = new SendMessage();
+        sm.setChatId(String.valueOf(chatId));
+        sm.setText(text);
+        sm.setReplyToMessageId(replyTo);
+        sm.setParseMode(parseMode);
         sm.setReplyMarkup(Keyboard.Reply.getDefault());
         sm.setDisableWebPagePreview(true);
 

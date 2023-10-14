@@ -51,6 +51,8 @@ public class TBot extends TelegramLongPollingBot {
     @Override
     public <T extends Serializable, Method extends BotApiMethod<T>> T execute(Method method) {
         try {
+            log.info("Something sent to user...");
+
             if (SendMessage.class.equals(method.getClass())) {
                 SendMessage parsed = (SendMessage) method;
 
