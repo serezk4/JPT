@@ -22,14 +22,18 @@ public class Query {
     Long userId;
     Long chat;
     LocalDate date;
-    String query;
-    boolean ok;
 
-    public Query(Long userId, Long chat, String query, boolean ok) {
+    @Column(length = 5000)
+    String query;
+
+    @Column(length = 5000)
+    String answer;
+
+    public Query(Long userId, Long chat, String query, String answer) {
         this.userId = userId;
         this.chat = chat;
         this.date = LocalDate.now();
         this.query = query;
-        this.ok = ok;
+        this.answer = answer;
     }
 }

@@ -10,6 +10,7 @@ import com.serezka.jpt.telegram.sessions.manager.StepManager;
 import com.serezka.jpt.telegram.sessions.types.Session;
 import com.serezka.jpt.telegram.sessions.types.menu.MenuSession;
 import com.serezka.jpt.telegram.sessions.types.step.StepSession;
+import com.serezka.jpt.telegram.utils.AntiSpam;
 import com.serezka.jpt.telegram.utils.Keyboard;
 import com.serezka.jpt.telegram.utils.Send;
 import lombok.AccessLevel;
@@ -18,8 +19,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Controller;
+import org.telegram.telegrambots.meta.api.methods.ParseMode;
+import org.telegram.telegrambots.meta.api.objects.InputFile;
 
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,13 +38,18 @@ import java.util.stream.Collectors;
 @Controller
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@PropertySource("classpath:telegram.properties")
 public class THandler {
     // handler per-init settings
-    @Getter List<Command<? extends Session>> commands = new ArrayList<>();
+    @Getter
+    List<Command<? extends Session>> commands = new ArrayList<>();
 
     // database services
     UserService userService;
     InviteCodeService inviteCodeService;
+
+    // anti-spam services
+    AntiSpam antiSpam;
 
     // gpt services
     GPTUtil gptUtil;
@@ -48,6 +61,7 @@ public class THandler {
     public void addCommand(Command<? extends Session> command) {
         commands.add(command);
     }
+    // settings from proerties
 
     @SneakyThrows
     public void process(TBot bot, TUpdate update) {
@@ -90,8 +104,27 @@ public class THandler {
         }
 
         Optional<Command<? extends Session>> optionalSelected = commands.stream().filter(command -> command.getNames().contains(text)).findFirst();
+
         if (optionalSelected.isEmpty()) {
-            bot.execute(Send.messageWithoutParseMode(chatId, gptUtil.completeQuery(chatId, text, GPTUtil.Formatting.TEXT)));
+            // anti-spam system
+            if (antiSpam.isSpam(user.getId(), 3) && !update.getSelf().hasCallbackQuery()) {
+                bot.sendMessage(chatId, "\uD83D\uDFE5 Вы <b>слишком часто</b> отправляете запросы! Подождите.");
+                return;
+            }
+
+            long start = System.currentTimeMillis();
+            int prepareMessageId = bot.sendMessage(chatId, "<i>генерация... </i>").getMessageId();
+            String gptAnswer = gptUtil.completeQuery(chatId, text, GPTUtil.Formatting.TEXT);
+
+            boolean isNull = bot.execute(Send.message(chatId, String.format("*Ответ* _%ds_%n%s", (System.currentTimeMillis() - start) / 1000,gptAnswer), ParseMode.MARKDOWN, update.getMessageId())) == null;
+            if (isNull) {
+                bot.execute(Send.document(chatId, new InputFile(
+                        new ByteArrayInputStream(("т.к. Telegram не может отобразить данный ответ, он в файле.\n\n" + gptAnswer)
+                                .getBytes(StandardCharsets.UTF_8)), "answer.txt"), update.getMessageId())
+                );
+            }
+
+            bot.deleteMessage(chatId, prepareMessageId);
             return;
         }
 
@@ -105,7 +138,7 @@ public class THandler {
 
         // run session
         session.next(bot, update);
-  }
+    }
 
     public String getHelp(int adminLvl) {
         StringBuilder help = new StringBuilder("Кажется, вы ошиблись в команде. Список допустимых команд:\n");
