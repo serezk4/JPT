@@ -12,7 +12,7 @@ import java.util.List;
 @Component
 public class Github extends Command<EmptySession> {
     public Github() {
-        super(List.of("\uD83D\uDCDC Github"), "get github link", User.Role.DEFAULT.getAdminLvl());
+        super(List.of("\uD83D\uDCDC О боте", "/bot"), "get github link", User.Role.DEFAULT.getAdminLvl());
     }
 
     @Override
@@ -22,6 +22,18 @@ public class Github extends Command<EmptySession> {
 
     @Override
     public void execute(TBot bot, TUpdate update, List<String> history) {
-        bot.sendMessage(update.getChatId(), "<b>Author: Sergey Dorokhin</b>\n<code>code:</code> https://github.com/serezk4/JPT\n<code>issues:</code> https://github.com/serezk4/JPT/issues");
+        bot.sendMessage(update.getChatId(), """
+                <b>Автор: Sergey Dorokhin</b>
+                \\_-? @serezkk ?-_/
+                
+                <b>Полезные ссылочки:</b>
+                =| <a href="https://github.com/serezk4/JPT">проект на гитхабе</a>
+                =| <a href="https://github.com/serezk4/JPT/issues">отправить проблему</a>
+                
+                При возникновении багов/проблем - пишите или в тг, или <a href="https://github.com/serezk4/JPT/issues">сюда</a>. Все пофиксим.
+                
+                   ⠀  ⠀⠀   (\\_/)
+                   ⠀⠀(  =(^Y^)=
+                ____\\_(m___m)_____________""");
     }
 }

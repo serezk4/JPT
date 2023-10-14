@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 
 @Component
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -22,7 +23,7 @@ public class Profile extends Command<MenuSession> {
     ProfilePage profilePage;
 
     public Profile(ProfilePage profilePage) {
-        super(List.of("\uD83D\uDCD1 Настройки чата"), "настройки чата", User.Role.DEFAULT.getAdminLvl());
+        super(List.of("⚙️ Настройки чата"), "настройки чата", User.Role.DEFAULT.getAdminLvl());
 
         this.profilePage = profilePage;
     }
@@ -41,6 +42,8 @@ public class Profile extends Command<MenuSession> {
                 %s
                 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
                 """;
+
+        private static final List<String> exitWords = List.of("Закрыть менюшку", "Уйди!", "Закрыть окно");
 
         public ProfilePage(UserService userService, QueryService queryService) {
 
@@ -73,7 +76,10 @@ public class Profile extends Command<MenuSession> {
                                 new Button("⬆️ +0.1", "temp/+0.1", this)
                         },
                         {
-                                new Button("\uD83D\uDCAC Очистить историю чата", "remove_chat_history")
+                                new Button("\uD83D\uDDD1️ Очистить историю запросов", "remove_chat_history")
+                        },
+                        {
+                                new Button(exitWords.get(new Random().nextInt(exitWords.size())), Keyboard.Actions.CLOSE.getCallback())
                         }
                 });
             });

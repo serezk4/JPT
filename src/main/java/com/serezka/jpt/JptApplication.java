@@ -4,6 +4,7 @@ import com.serezka.jpt.telegram.commands.admin.CreateInvite;
 import com.serezka.jpt.telegram.commands.admin.GetQueries;
 import com.serezka.jpt.telegram.commands.admin.GetUsers;
 import com.serezka.jpt.telegram.commands.user.Github;
+import com.serezka.jpt.telegram.commands.user.HelpMe;
 import com.serezka.jpt.telegram.commands.user.Profile;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,7 @@ public class JptApplication implements ApplicationRunner {
     // user
     Profile profile;
     Github github;
+    HelpMe helpMe;
 
     // admin
     GetQueries getQueries;
@@ -46,6 +48,7 @@ public class JptApplication implements ApplicationRunner {
     public void run(ApplicationArguments args) throws Exception {
         tHandler.addCommand(profile);
         tHandler.addCommand(github);
+        tHandler.addCommand(helpMe);
 
         tHandler.addCommand(getQueries);
         tHandler.addCommand(getUsers);

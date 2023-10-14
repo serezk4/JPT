@@ -107,15 +107,15 @@ public class THandler {
         if (optionalSelected.isEmpty()) {
             // anti-spam system
             if (antiSpam.isSpam(user.getId(), 3) && !update.getSelf().hasCallbackQuery()) {
-                bot.sendMessage(chatId, "\uD83D\uDFE5 Вы <b>слишком часто</b> отправляете запросы! Подождите.");
+                bot.sendMessage(chatId, "\uD83D\uDE21 <b>Не спамь!</b>");
                 return;
             }
 
             long start = System.currentTimeMillis();
-            int prepareMessageId = bot.sendMessage(chatId, "<i>генерация... </i>").getMessageId();
+            int prepareMessageId = bot.sendMessage(chatId, "⌛ <i>Генерирую ответ... </i>").getMessageId();
             String gptAnswer = gptUtil.completeQuery(chatId, text, GPTUtil.Formatting.TEXT);
 
-            boolean isNull = bot.execute(Send.message(chatId, String.format("*Ответ* _%ds_%n%s", (System.currentTimeMillis() - start) / 1000,gptAnswer), ParseMode.MARKDOWN, update.getMessageId())) == null;
+            boolean isNull = bot.execute(Send.message(chatId, String.format("\uD83D\uDCAC *Ответ*%n\uD83D\uDD52 _%ds_%n%n%s", (System.currentTimeMillis() - start) / 1000,gptAnswer), ParseMode.MARKDOWN, update.getMessageId())) == null;
             if (isNull) {
                 bot.execute(Send.document(chatId, new InputFile(
                         new ByteArrayInputStream(("т.к. Telegram не может отобразить данный ответ, он в файле:\n\n" + gptAnswer)

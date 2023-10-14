@@ -39,7 +39,7 @@ public class Page {
             // todo!!
             if (getButtons() == null) return new Keyboard.Inline.Button[][]{{}};
 
-            Keyboard.Inline.Button[][] transferred = new Keyboard.Inline.Button[getButtons().length + 1][];
+            Keyboard.Inline.Button[][] transferred = new Keyboard.Inline.Button[getButtons().length/* + 1*/][];
 
             for (int row = 0; row < getButtons().length; row++) {
                 transferred[row] = Arrays.stream(getButtons()[row])
@@ -48,10 +48,10 @@ public class Page {
                         .toList().toArray(new Keyboard.Inline.Button[0]);
             }
 
-            transferred[transferred.length - 1] = new Keyboard.Inline.Button[]{
-                    new Button(Keyboard.Actions.BACK.getName(), Keyboard.Actions.BACK.getCallback()).transfer(sessionId),
-                    new Button(Keyboard.Actions.CLOSE.getName(), Keyboard.Actions.CLOSE.getCallback()).transfer(sessionId)
-            };
+//            transferred[transferred.length - 1] = new Keyboard.Inline.Button[]{
+////                    new Button(Keyboard.Actions.BACK.getName(), Keyboard.Actions.BACK.getCallback()).transfer(sessionId),
+//                    new Button(Keyboard.Actions.CLOSE.getName(), Keyboard.Actions.CLOSE.getCallback()).transfer(sessionId)
+//            };
 
             return transferred;
         }
