@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 
 @Component
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -22,7 +23,7 @@ public class Profile extends Command<MenuSession> {
     ProfilePage profilePage;
 
     public Profile(ProfilePage profilePage) {
-        super(List.of("\uD83D\uDCD1 Профиль"), "просмотр профиля", User.Role.DEFAULT.getAdminLvl());
+        super(List.of("⚙️ Настройки чата"), "настройки чата", User.Role.DEFAULT.getAdminLvl());
 
         this.profilePage = profilePage;
     }
@@ -36,10 +37,13 @@ public class Profile extends Command<MenuSession> {
     @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
     public static class ProfilePage extends Page {
         private static final String TEMPLATE = """
-                <b>Username:</b> <i>%s</i>
-                <b>Queries:</b> <i>%d</i>
+                <b>Имя:</b> <i>%s</i>
+                <b>Кол-во запросов:</b> <i>%d</i>
+                %s
                 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
                 """;
+
+        private static final List<String> exitWords = List.of("Закрыть менюшку", "Уйди!", "Закрыть окно");
 
         public ProfilePage(UserService userService, QueryService queryService) {
 
@@ -51,31 +55,31 @@ public class Profile extends Command<MenuSession> {
                     return new Data("Error: can't find user", new Button[][]{{new Button(Keyboard.Actions.CLOSE.getName(), Keyboard.Actions.CLOSE.getCallback())}});
                 User user = optionalUser.get();
 
+                String incall = "";
                 if (callback != null && callback.startsWith("temp/") && callback.matches("temp/[+-]\\d.\\d$")) {
                     double delta = Double.parseDouble(callback.substring("temp/".length()));
                     user.setTemperature(user.getTemperature() + delta);
-
                     userService.save(user);
                 }
 
-                if (callback != null && callback.startsWith("chat/") && callback.matches("chat/[+-]1$")) {
-                    int delta = Integer.parseInt(callback.substring("chat/".length()));
-                    user.setChat(user.getChat() + delta);
-
+                if (callback != null && callback.startsWith("remove_chat_history")) {
+                    user.setChat(user.getChat() + 1);
+                    incall = "<code>Update:</code> <b>История чата очищенна</b>";
                     userService.save(user);
                 }
 
-                return new Data(String.format(TEMPLATE, user.getUsername(), queryService.countAllByUserId(user.getId()))
+                return new Data(String.format(TEMPLATE, user.getUsername(), queryService.countAllByUserId(user.getId()), incall)
                         , new Button[][]{
                         {
-                                new Button("⬆️ +0.1", "temp/+0.1", this),
+                                new Button("⬇️ -0.1", "temp/-0.1", this),
                                 new Button(String.format("\uD83C\uDF21️ Temp: %.1f", user.getTemperature()), "ignored"),
-                                new Button("⬇️ -0.1", "temp/-0.1", this)
+                                new Button("⬆️ +0.1", "temp/+0.1", this)
                         },
                         {
-                                new Button("⬆️ +1", "chat/+1"),
-                                new Button("\uD83D\uDCAC Чат: " + user.getChat(), "ignored"),
-                                new Button("⬇️ -1", "chat/-1")
+                                new Button("\uD83D\uDDD1️ Очистить историю запросов", "remove_chat_history")
+                        },
+                        {
+                                new Button(exitWords.get(new Random().nextInt(exitWords.size())), Keyboard.Actions.CLOSE.getCallback())
                         }
                 });
             });

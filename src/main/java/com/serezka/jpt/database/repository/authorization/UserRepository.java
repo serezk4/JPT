@@ -15,6 +15,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByUsernameOrChatId(String username, Long chatId);
     boolean existsByChatId(long chatId);
 
+    List<User> findAll();
     List<User> findByRole(User.Role role);
+
     long countByRole(User.Role role);
 }

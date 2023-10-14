@@ -27,7 +27,7 @@ public class Keyboard {
     @Getter
     @AllArgsConstructor
     public enum Actions {
-        CLOSE("Закрыть", "exit"), BACK("назад", "back");
+        CLOSE("\uD83E\uDD0F Закрыть", "exit"), BACK("назад", "back");
 
         String name;
         String callback;
@@ -40,7 +40,8 @@ public class Keyboard {
 
         public static ReplyKeyboardMarkup getDefault(User.BotMode botMode) {
             return getCustomKeyboard(new String[][]{
-                    {"\uD83D\uDCD1 Профиль", "\uD83D\uDCDC Github"},
+                    {"\uD83D\uDCDC О боте", "\uD83D\uDCD9 Помогите!"},
+                    {"⚙️ Настройки чата"}
             });
 
         }
