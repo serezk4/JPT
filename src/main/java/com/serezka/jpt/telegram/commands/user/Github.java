@@ -22,6 +22,6 @@ public class Github extends Command<EmptySession> {
 
     @Override
     public void execute(TBot bot, TUpdate update, List<String> history) {
-        bot.sendMessage(update.getChatId(), "code: https://github.com/serezk4/JPT\nissues: https://github.com/serezk4/JPT/issues");
+        bot.sendMessage(update.getChatId(), "<b>Author: Sergey Dorokhin</b>\n<code>code:</code> https://github.com/serezk4/JPT\n<code>issues:</code> https://github.com/serezk4/JPT/issues");
     }
 }

@@ -19,7 +19,8 @@ public class InviteCode {
     String code;
     Integer usageCount;
 
-    public InviteCode(String code) {
+    public InviteCode(String code, int usageCount) {
         this.code = code;
+        this.usageCount = usageCount;
     }
 }

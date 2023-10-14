@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Controller;
 import org.telegram.telegrambots.meta.api.methods.ParseMode;
+import org.telegram.telegrambots.meta.api.objects.Chat;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 
 import java.io.BufferedInputStream;
@@ -61,7 +62,6 @@ public class THandler {
     public void addCommand(Command<? extends Session> command) {
         commands.add(command);
     }
-    // settings from proerties
 
     @SneakyThrows
     public void process(TBot bot, TUpdate update) {
@@ -118,7 +118,7 @@ public class THandler {
             boolean isNull = bot.execute(Send.message(chatId, String.format("*Ответ* _%ds_%n%s", (System.currentTimeMillis() - start) / 1000,gptAnswer), ParseMode.MARKDOWN, update.getMessageId())) == null;
             if (isNull) {
                 bot.execute(Send.document(chatId, new InputFile(
-                        new ByteArrayInputStream(("т.к. Telegram не может отобразить данный ответ, он в файле.\n\n" + gptAnswer)
+                        new ByteArrayInputStream(("т.к. Telegram не может отобразить данный ответ, он в файле:\n\n" + gptAnswer)
                                 .getBytes(StandardCharsets.UTF_8)), "answer.txt"), update.getMessageId())
                 );
             }
