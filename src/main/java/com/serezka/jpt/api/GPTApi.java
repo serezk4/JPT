@@ -28,14 +28,12 @@ public class GPTApi {
     Gson gson = new Gson();
     String url;
 
-
-
     public GPTApi(@Value("${gpt.server}") String url) {
         this.url = url;
     }
 
-    public String query(List<String> messages, double temperature) throws IOException {
-        Query query = new Query(messages.stream().map(Query.Message::new).toList(), temperature);
+    public String query(List<Query.Message> messages, double temperature) throws IOException {
+        Query query = new Query(messages, temperature);
         HttpPost httpPost = getHttpPost(String.format("%s/getAnswer", url), getStringEntity(gson.toJson(query)));
 
         CloseableHttpClient httpClient = HttpClientBuilder.create().build();
@@ -98,13 +96,12 @@ public class GPTApi {
             this.temperature = temperature;
         }
 
-        @AllArgsConstructor
         public static class Message {
             String content;
             String role = "user";
 
-            public Message(String content) {
-                this.content = content;
+            public Message(String role,String content) {
+                this.content = role + ": " + content;
             }
         }
     }

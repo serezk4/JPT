@@ -90,6 +90,7 @@ public class THandler {
             log.warn("User exception (can't find or create) | {} : {}", username, chatId);
             return;
         }
+
         User user = optionalUser.get();
 
         if (stepManager.containsSession(chatId) && queryType != TUpdate.QueryType.INLINE_QUERY) {

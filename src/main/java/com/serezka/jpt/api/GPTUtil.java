@@ -59,13 +59,17 @@ public class GPTUtil {
 
         User user = optionalUser.get();
 
-        List<String> queries = new ArrayList<>(queryService.findAllByUserIdAndChat(user.getId(), user.getChat())
-                .stream()
-                .map(q -> "user: " + q.getQuery())
-                .toList());
-        queries.add("user: " + query);
 
-        String answer = gptApi.query(queries, user.getTemperature());
+        List<GPTApi.Query.Message> messages = new ArrayList<>();
+        queryService.findAllByUserIdAndChat(user.getId(), user.getChat())
+                .forEach(u -> {
+                    messages.add(new GPTApi.Query.Message("user", u.getQuery()));
+                    messages.add(new GPTApi.Query.Message("assistant", u.getAnswer()));
+                });
+
+        messages.add(new GPTApi.Query.Message("user", query));
+
+        String answer = gptApi.query(messages, user.getTemperature());
 
         log.info("Query: {} | Answer: {}", query, answer);
         queryService.save(new Query(user.getId(), user.getChat(), query, answer));
