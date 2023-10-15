@@ -12,6 +12,7 @@ import com.serezka.jpt.telegram.sessions.types.menu.MenuSession;
 import com.serezka.jpt.telegram.sessions.types.step.StepSession;
 import com.serezka.jpt.telegram.utils.AntiSpam;
 import com.serezka.jpt.telegram.utils.Keyboard;
+import com.serezka.jpt.telegram.utils.ReadOffice;
 import com.serezka.jpt.telegram.utils.Send;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -19,9 +20,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Controller;
+import org.telegram.telegrambots.meta.api.methods.GetFile;
 import org.telegram.telegrambots.meta.api.methods.ParseMode;
 import org.telegram.telegrambots.meta.api.objects.Chat;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
@@ -29,6 +35,8 @@ import org.telegram.telegrambots.meta.api.objects.InputFile;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -74,7 +82,7 @@ public class THandler {
         // -> collect data
         long chatId = update.getChatId();
         String username = update.getUsername();
-        String text = new String(update.getText().getBytes(), StandardCharsets.UTF_8);
+        String text = new String((update.getText() != null ? update.getText() : update.getSelf().getMessage().getCaption()).getBytes(), StandardCharsets.UTF_8);
         TUpdate.QueryType queryType = update.getQueryType();
 
         log.info(String.format("New Message: chatId[%s] username[%s] message[%s] | QType: %s", chatId, username, text, queryType.toString()));
@@ -103,7 +111,8 @@ public class THandler {
             return;
         }
 
-        Optional<Command<? extends Session>> optionalSelected = commands.stream().filter(command -> command.getNames().contains(text)).findFirst();
+        String finalText = text;
+        Optional<Command<? extends Session>> optionalSelected = commands.stream().filter(command -> command.getNames().contains(finalText)).findFirst();
 
         if (optionalSelected.isEmpty()) {
             // anti-spam system
@@ -112,11 +121,17 @@ public class THandler {
                 return;
             }
 
+            if (update.getSelf().hasMessage() && update.getSelf().getMessage().hasDocument()) {
+                String filePath = bot.execute(new GetFile(update.getSelf().getMessage().getDocument().getFileId())).getFilePath();
+                String documentData = ReadOffice.readExcel(new URI("https://api.telegram.org/file/bot" + bot.getBotToken() + "/" + filePath).toURL().openStream());
+                text += "[document]\n" + documentData;
+            }
+
             long start = System.currentTimeMillis();
             int prepareMessageId = bot.sendMessage(chatId, "⌛ <i>Генерирую ответ... </i>").getMessageId();
             String gptAnswer = gptUtil.completeQuery(chatId, text, GPTUtil.Formatting.TEXT);
 
-            boolean isNull = bot.execute(Send.message(chatId, String.format("\uD83D\uDCAC *Ответ*%n\uD83D\uDD52 _%ds_%n%n%s", (System.currentTimeMillis() - start) / 1000,gptAnswer), ParseMode.MARKDOWN, update.getMessageId())) == null;
+            boolean isNull = bot.execute(Send.message(chatId, String.format("\uD83D\uDCAC *Ответ*%n\uD83D\uDD52 _%ds_%n%n%s", (System.currentTimeMillis() - start) / 1000, gptAnswer), ParseMode.MARKDOWN, update.getMessageId())) == null;
             if (isNull) {
                 bot.execute(Send.document(chatId, new InputFile(
                         new ByteArrayInputStream(("т.к. Telegram не может отобразить данный ответ, он в файле:\n\n" + gptAnswer)

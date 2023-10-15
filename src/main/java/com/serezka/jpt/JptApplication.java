@@ -6,6 +6,7 @@ import com.serezka.jpt.telegram.commands.admin.GetUsers;
 import com.serezka.jpt.telegram.commands.user.Github;
 import com.serezka.jpt.telegram.commands.user.HelpMe;
 import com.serezka.jpt.telegram.commands.user.Profile;
+import com.serezka.jpt.telegram.utils.ReadOffice;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -16,6 +17,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import com.serezka.jpt.telegram.bot.*;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
+
+import java.io.File;
+import java.io.FileInputStream;
 
 
 @SpringBootApplication
