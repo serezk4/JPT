@@ -1,18 +1,23 @@
 package com.serezka.jpt.telegram.utils;
 
+import com.ctc.wstx.util.WordResolver;
 import lombok.SneakyThrows;
+import org.apache.commons.io.IOUtils;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xwpf.extractor.XWPFWordExtractor;
+import org.apache.poi.xwpf.usermodel.XWPFDocument;
 
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class ReadOffice {
     public static final int width_limit = 20;
-    public static final int height_limit = 100;
-    public static final int max_sheets = 4;
+    public static final int height_limit = 200;
+    public static final int max_sheets = 10;
 
     @SneakyThrows // < todo
     public static String readExcel(InputStream is) {
@@ -44,6 +49,20 @@ public class ReadOffice {
             parsedSheets.put(sheet.getSheetName(), result.toString());
         }
 
+        workbook.close();
         return parsedSheets.entrySet().stream().map(e -> (e.getKey() + ":\n" + e.getValue() + "\n\n")).collect(Collectors.joining());
+    }
+
+    @SneakyThrows
+    public static String readWord(InputStream is) {
+        XWPFDocument document = new XWPFDocument(is);
+        XWPFWordExtractor wordExtractor = new XWPFWordExtractor(document);
+        document.close();
+        return wordExtractor.getText();
+    }
+
+    @SneakyThrows
+    public static String readTxt(InputStream is) {
+        return IOUtils.toString(is, StandardCharsets.UTF_8);
     }
 }

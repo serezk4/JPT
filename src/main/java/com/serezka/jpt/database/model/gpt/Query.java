@@ -23,10 +23,10 @@ public class Query {
     Long chat;
     LocalDate date;
 
-    @Column(length = 15000)
+    @Column(length = 5000)
     String query;
 
-    @Column(length = 15000)
+    @Column(length = 5000)
     String answer;
 
     public Query(Long userId, Long chat, String query, String answer) {

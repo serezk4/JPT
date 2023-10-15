@@ -12,10 +12,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Component
 @RequiredArgsConstructor
@@ -59,6 +56,11 @@ public class GPTUtil {
 
         User user = optionalUser.get();
 
+        StringTokenizer stringTokenizer = new StringTokenizer(query, " ");
+        StringBuilder limitQuery = new StringBuilder();
+        int usedTokens = 0;
+        while (++usedTokens < 2048 && stringTokenizer.hasMoreTokens())
+            limitQuery.append(stringTokenizer.nextToken()).append(" ");
 
         List<GPTApi.Query.Message> messages = new ArrayList<>();
         queryService.findAllByUserIdAndChat(user.getId(), user.getChat())
@@ -67,12 +69,17 @@ public class GPTUtil {
                     messages.add(new GPTApi.Query.Message("assistant", u.getAnswer()));
                 });
 
-        messages.add(new GPTApi.Query.Message("user", query));
+        messages.add(new GPTApi.Query.Message("user", limitQuery.toString()));
 
-        String answer = gptApi.query(messages, user.getTemperature());
+        String answer = gptApi.query(messages, user.getTemperature())
+//                .replaceAll("<", "(").replaceAll(">", ")") todo
+//                .replaceAll("\\|", "/")
+                .replaceAll("<br/>", "\n")
+                .replaceAll("assistant", "")
+                .replaceAll("</im_sep/>", "");
 
-        log.info("Query: {} | Answer: {}", query, answer);
-        queryService.save(new Query(user.getId(), user.getChat(), query, answer));
+        if (limitQuery.length() < 5000 && answer.length() < 5000)
+            queryService.save(new Query(user.getId(), user.getChat(), query, answer));
 
         return switch (formatting) {
             case TEXT -> answer.replaceAll("<br/>", "\n");

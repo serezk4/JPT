@@ -30,6 +30,7 @@ import org.springframework.stereotype.Controller;
 import org.telegram.telegrambots.meta.api.methods.GetFile;
 import org.telegram.telegrambots.meta.api.methods.ParseMode;
 import org.telegram.telegrambots.meta.api.objects.Chat;
+import org.telegram.telegrambots.meta.api.objects.Document;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 
 import java.io.BufferedInputStream;
@@ -82,7 +83,8 @@ public class THandler {
         // -> collect data
         long chatId = update.getChatId();
         String username = update.getUsername();
-        String text = new String((update.getText() != null ? update.getText() : update.getSelf().getMessage().getCaption()).getBytes(), StandardCharsets.UTF_8);
+        // TODO убрать ****-код
+        String text = new String((update.getText() != null ? update.getText() : (update.getSelf().getMessage().getCaption() == null ? "" : update.getSelf().getMessage().getCaption())).getBytes(), StandardCharsets.UTF_8);
         TUpdate.QueryType queryType = update.getQueryType();
 
         log.info(String.format("New Message: chatId[%s] username[%s] message[%s] | QType: %s", chatId, username, text, queryType.toString()));
@@ -121,17 +123,42 @@ public class THandler {
                 return;
             }
 
+            List<String> error = new ArrayList<>();
+
             if (update.getSelf().hasMessage() && update.getSelf().getMessage().hasDocument()) {
-                String filePath = bot.execute(new GetFile(update.getSelf().getMessage().getDocument().getFileId())).getFilePath();
-                String documentData = ReadOffice.readExcel(new URI("https://api.telegram.org/file/bot" + bot.getBotToken() + "/" + filePath).toURL().openStream());
-                text += "[document]\n" + documentData;
+                Document document = update.getSelf().getMessage().getDocument();
+
+                String filePath = bot.execute(new GetFile(document.getFileId())).getFilePath();
+                InputStream fileIs = new URI("https://api.telegram.org/file/bot" + bot.getBotToken() + "/" + filePath).toURL().openStream();
+
+                String documentData = null;
+
+                // .xls:
+                if (filePath.endsWith(".xls"))
+                    documentData = ReadOffice.readExcel(fileIs);
+
+                // .word
+                if (filePath.endsWith(".docx"))
+                    documentData = ReadOffice.readWord(fileIs);
+
+                // .txt
+                if (filePath.endsWith(".txt"))
+                    documentData = ReadOffice.readTxt(fileIs);
+
+                if (documentData != null)
+                    text += "[document]\n" + documentData;
+                else
+                    error.add("Пока что поддерживаются только форматы *.xls*, *.docx*, *.txt*.");
             }
 
-            long start = System.currentTimeMillis();
             int prepareMessageId = bot.sendMessage(chatId, "⌛ <i>Генерирую ответ... </i>").getMessageId();
             String gptAnswer = gptUtil.completeQuery(chatId, text, GPTUtil.Formatting.TEXT);
 
-            boolean isNull = bot.execute(Send.message(chatId, String.format("\uD83D\uDCAC *Ответ*%n\uD83D\uDD52 _%ds_%n%n%s", (System.currentTimeMillis() - start) / 1000, gptAnswer), ParseMode.MARKDOWN, update.getMessageId())) == null;
+            if (text.length() > 5000)
+                error.add("*Запрос слишком длинный и не будет сохранен в историю*");
+
+            boolean isNull = bot.execute(Send.message(chatId, error.stream().map(s -> "⁉️ " + s + "\n\n").collect(Collectors.joining()) +
+                    "\uD83D\uDCAC " + gptAnswer, ParseMode.MARKDOWN, update.getMessageId())) == null;
             if (isNull) {
                 bot.execute(Send.document(chatId, new InputFile(
                         new ByteArrayInputStream(("т.к. Telegram не может отобразить данный ответ, он в файле:\n\n" + gptAnswer)
