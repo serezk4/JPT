@@ -12,7 +12,7 @@ import java.util.List;
 @Component
 public class Github extends Command<EmptySession> {
     public Github() {
-        super(List.of("\uD83D\uDCDC О боте", "/bot"), "get github link", User.Role.DEFAULT.getAdminLvl());
+        super(List.of("ℹ️ О боте", "/bot"), "get github link", User.Role.DEFAULT.getAdminLvl());
     }
 
     @Override

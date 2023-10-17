@@ -40,7 +40,6 @@ public class Profile extends Command<MenuSession> {
                 <b>Имя:</b> <i>%s</i>
                 <b>Кол-во запросов:</b> <i>%d</i>
                 %s
-                ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
                 """;
 
         private static final List<String> exitWords = List.of("Закрыть менюшку", "Уйди!", "Закрыть окно");
@@ -58,7 +57,9 @@ public class Profile extends Command<MenuSession> {
                 String incall = "";
                 if (callback != null && callback.startsWith("temp/") && callback.matches("temp/[+-]\\d.\\d$")) {
                     double delta = Double.parseDouble(callback.substring("temp/".length()));
-                    user.setTemperature(user.getTemperature() + delta);
+                    final double oldTemp = user.getTemperature(), newTemp = oldTemp + delta;
+                    user.setTemperature(newTemp);
+                    incall = String.format("<code>Update:</code> <b>Temp changed: %.1f -> %.1f </b>", oldTemp, newTemp);
                     userService.save(user);
                 }
 
@@ -75,9 +76,9 @@ public class Profile extends Command<MenuSession> {
                                 new Button(String.format("\uD83C\uDF21️ Temp: %.1f", user.getTemperature()), "ignored"),
                                 new Button("⬆️ +0.1", "temp/+0.1", this)
                         },
-                        {
-                                new Button("\uD83D\uDDD1️ Очистить историю запросов", "remove_chat_history")
-                        },
+//                        {
+//                                new Button("\uD83D\uDDD1️ Очистить историю запросов", "remove_chat_history")
+//                        },
                         {
                                 new Button(exitWords.get(new Random().nextInt(exitWords.size())), Keyboard.Actions.CLOSE.getCallback())
                         }

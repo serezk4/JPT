@@ -3,6 +3,7 @@ package com.serezka.jpt;
 import com.serezka.jpt.telegram.commands.admin.CreateInvite;
 import com.serezka.jpt.telegram.commands.admin.GetQueries;
 import com.serezka.jpt.telegram.commands.admin.GetUsers;
+import com.serezka.jpt.telegram.commands.user.ClearHistory;
 import com.serezka.jpt.telegram.commands.user.Github;
 import com.serezka.jpt.telegram.commands.user.HelpMe;
 import com.serezka.jpt.telegram.commands.user.Profile;
@@ -41,6 +42,7 @@ public class JptApplication implements ApplicationRunner {
     GetQueries getQueries;
     GetUsers getUsers;
     CreateInvite createInvite;
+    ClearHistory clearHistory;
 
     // ..
 
@@ -53,6 +55,7 @@ public class JptApplication implements ApplicationRunner {
         tHandler.addCommand(profile);
         tHandler.addCommand(github);
         tHandler.addCommand(helpMe);
+        tHandler.addCommand(clearHistory);
 
         tHandler.addCommand(getQueries);
         tHandler.addCommand(getUsers);

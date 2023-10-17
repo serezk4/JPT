@@ -12,7 +12,7 @@ import java.util.List;
 @Component
 public class HelpMe extends Command<EmptySession> {
     public HelpMe() {
-        super(List.of("\uD83D\uDCD9 Помогите!"), "базовые особенности бота", User.Role.DEFAULT.getAdminLvl());
+        super(List.of("\uD83C\uDD98 Помогите!"), "базовые особенности бота", User.Role.DEFAULT.getAdminLvl());
     }
 
     @Override

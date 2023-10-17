@@ -19,32 +19,12 @@ import java.util.*;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Log4j2
 public class GPTUtil {
-    public static final String TEMPLATE = """
-            <!DOCTYPE html>
-            <html lang="en">
-              <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <meta http-equiv="X-UA-Compatible" content="ie=edge">
-                <title>My Website</title>
-                <link rel="stylesheet" href="./style.css">
-                <link rel="icon" href="./favicon.ico" type="image/x-icon">
-              </head>
-              <body>
-                <main>
-                    <h1>Answer:</h1> \s
-                    <a>%s</a>
-                </main>
-              </body>
-            </html>
-            """;
-
     GPTApi gptApi;
     UserService userService;
     QueryService queryService;
 
     public enum Formatting {
-        HTML, TEXT;
+        TEXT;
     }
 
     public String completeQuery(long chatId, String query, Formatting formatting) throws IOException {
@@ -72,18 +52,16 @@ public class GPTUtil {
         messages.add(new GPTApi.Query.Message("user", limitQuery.toString()));
 
         String answer = gptApi.query(messages, user.getTemperature())
-//                .replaceAll("<", "(").replaceAll(">", ")") todo
-//                .replaceAll("\\|", "/")
                 .replaceAll("<br/>", "\n")
                 .replaceAll("assistant", "")
-                .replaceAll("</im_sep/>", "");
+                .replaceAll("<\\|im_sep\\|>", "");
 
         if (limitQuery.length() < 5000 && answer.length() < 5000)
             queryService.save(new Query(user.getId(), user.getChat(), query, answer));
 
         return switch (formatting) {
-            case TEXT -> answer.replaceAll("<br/>", "\n");
-            case HTML -> answer;
+            case TEXT -> answer; //todo in future
+//            case HTML -> answer;
             case null -> answer;
         };
     }
