@@ -1,5 +1,6 @@
-package com.serezka.jpt.telegram.utils;
+package com.serezka.jpt.telegram.utils.methods.v1;
 
+import com.serezka.jpt.telegram.utils.Keyboard;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.telegram.telegrambots.meta.api.methods.ParseMode;

@@ -5,14 +5,10 @@ import com.serezka.jpt.telegram.bot.TUpdate;
 import com.serezka.jpt.telegram.sessions.manager.MenuManager;
 import com.serezka.jpt.telegram.sessions.types.Session;
 import com.serezka.jpt.telegram.utils.Keyboard;
-import com.serezka.jpt.telegram.utils.Send;
-import com.serezka.jpt.telegram.utils.messages.SendV2;
+import com.serezka.jpt.telegram.utils.methods.v2.Send;
 import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
-import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 
 import java.util.*;
@@ -79,11 +75,11 @@ public class MenuSession extends Session {
         // send answer
         if (getBotsMessagesIds().isEmpty())
             getBotsMessagesIds().add(bot.sendMessage(
-                    SendV2.Message.build()
+                    Send.Message.builder()
                             .chatId(update.getChatId()).text(pageData.getText())
-                            .replyKeyboard(keyboard).parseMode(SendV2.Parse.HTML)
+                            .replyKeyboard(keyboard).parseMode(Send.Parse.HTML)
                             .build()).getMessageId());
-        else bot.execute(Send.edit(chatId, getBotsMessagesIds().peek(), pageData.getText(), keyboard));
+        else bot.execute(com.serezka.jpt.telegram.utils.methods.v1.Send.edit(chatId, getBotsMessagesIds().peek(), pageData.getText(), keyboard));
 
         currentPage = nextPage;
     }
@@ -100,9 +96,9 @@ public class MenuSession extends Session {
 
         // send answer
         getBotsMessagesIds().add(bot.sendMessage(
-                SendV2.Message.build()
+                Send.Message.builder()
                         .chatId(update.getChatId()).text(pageData.getText())
-                        .replyKeyboard(keyboard).parseMode(SendV2.Parse.HTML)
+                        .replyKeyboard(keyboard).parseMode(Send.Parse.HTML)
                         .build()
         ).getMessageId());
     }

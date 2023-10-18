@@ -56,8 +56,8 @@ public class Profile extends Command<MenuSession> {
 
                 String incall = "";
                 if (callback != null && callback.startsWith("temp/") && callback.matches("temp/[+-]\\d.\\d$")) {
-                    double delta = Double.parseDouble(callback.substring("temp/".length()));
-                    final double oldTemp = user.getTemperature(), newTemp = oldTemp + delta;
+                    float delta = Float.parseFloat(callback.substring("temp/".length()));
+                    final float oldTemp = user.getTemperature(), newTemp = oldTemp + delta;
                     user.setTemperature(newTemp);
                     incall = String.format("<code>Update:</code> <b>Temp changed: %.1f -> %.1f </b>", oldTemp, newTemp);
                     userService.save(user);

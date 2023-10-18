@@ -5,7 +5,7 @@ import com.serezka.jpt.telegram.bot.TBot;
 import com.serezka.jpt.telegram.bot.TUpdate;
 import com.serezka.jpt.telegram.commands.Command;
 import com.serezka.jpt.telegram.sessions.types.empty.EmptySession;
-import com.serezka.jpt.telegram.utils.messages.SendV2;
+import com.serezka.jpt.telegram.utils.methods.v2.Send;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -25,7 +25,7 @@ public class Github extends Command<EmptySession> {
     public void execute(TBot bot, TUpdate update, List<String> history) {
         bot.deleteMessage(update.getChatId(), update.getMessageId());
 
-        bot.sendMessage(update.getChatId(), """
+        bot.sendMessage(Send.Message.builder().chatId(update.getChatId()).text("""
                 <b>Автор: Sergey Dorokhin</b>
                 \\_-? @serezkk ?-_/
                                 
@@ -42,6 +42,6 @@ public class Github extends Command<EmptySession> {
                                 
                 <b>   ⠀  ⠀   (\\_/)</b>
                 <b>   ⠀(  =(^Y^)=</b>
-                <b>____\\_(m___m)_____________</b>""", SendV2.Parse.HTML);
+                <b>____\\_(m___m)_____________</b>""").build());
     }
 }

@@ -1,5 +1,6 @@
 package com.serezka.jpt.telegram.utils;
 
+import com.serezka.jpt.database.model.authorization.User;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
@@ -23,18 +24,21 @@ public class AntiSpam {
         this.duration = duration;
     }
 
-    // ---
     Map<Long, Long> usersLastMessage = new WeakHashMap<>();
 
-    public boolean isSpam(Long userId, long allowedRangeOfSeconds) {
-        // get time
-        long last = usersLastMessage.getOrDefault(userId, 0L);
-        long curr = System.currentTimeMillis();
+    public boolean isSpam(User user) {
+        // get last and current time
+        long lastMessageTime = usersLastMessage.getOrDefault(user.getId(), 0L);
+        long currentTime = System.currentTimeMillis();
 
-        // update time
-        usersLastMessage.put(userId, curr);
+        // update last message's time
+        usersLastMessage.put(user.getId(), currentTime);
 
-        // check range and generate answer
-        return (curr - last) <= duration * 1000;
+        // check is within allowed range
+        return isWithinAllowedRange(currentTime, lastMessageTime);
+    }
+
+    private boolean isWithinAllowedRange(long currentTime, long lastMessageTime) {
+        return (currentTime - lastMessageTime) <= duration * 1000;
     }
 }

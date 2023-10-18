@@ -1,6 +1,5 @@
 package com.serezka.jpt.telegram.utils;
 
-import com.ctc.wstx.util.WordResolver;
 import lombok.SneakyThrows;
 import org.apache.commons.io.IOUtils;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
@@ -14,13 +13,13 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class ReadOffice {
+public class Read {
     public static final int width_limit = 20;
     public static final int height_limit = 200;
     public static final int max_sheets = 10;
 
     @SneakyThrows // < todo
-    public static String readExcel(InputStream is) {
+    public static String excel(InputStream is) {
         Workbook workbook = new HSSFWorkbook(is);
 
         List<Sheet> sheets = IntStream.range(0, Math.min(workbook.getNumberOfSheets(), max_sheets)).mapToObj(workbook::getSheetAt).toList();
@@ -54,7 +53,7 @@ public class ReadOffice {
     }
 
     @SneakyThrows
-    public static String readWord(InputStream is) {
+    public static String word(InputStream is) {
         XWPFDocument document = new XWPFDocument(is);
         XWPFWordExtractor wordExtractor = new XWPFWordExtractor(document);
         document.close();
@@ -62,7 +61,7 @@ public class ReadOffice {
     }
 
     @SneakyThrows
-    public static String readTxt(InputStream is) {
+    public static String file(InputStream is) {
         return IOUtils.toString(is, StandardCharsets.UTF_8);
     }
 }

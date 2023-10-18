@@ -6,7 +6,7 @@ import com.serezka.jpt.telegram.bot.TBot;
 import com.serezka.jpt.telegram.bot.TUpdate;
 import com.serezka.jpt.telegram.commands.Command;
 import com.serezka.jpt.telegram.sessions.types.empty.EmptySession;
-import com.serezka.jpt.telegram.utils.messages.SendV2;
+import com.serezka.jpt.telegram.utils.methods.v2.Send;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
@@ -21,7 +21,7 @@ public class ClearHistory extends Command<EmptySession> {
     UserService userService;
 
     public ClearHistory(UserService userService) {
-        super(List.of("\uD83D\uDDD1️ Очистить историю", "/clear"), "очистить историю чата", User.Role.DEFAULT.getAdminLvl());
+        super(List.of("\uD83D\uDDD1️ Очистить историю", "/clearHistory", "/clh"), "очистить историю чата", User.Role.DEFAULT.getAdminLvl());
 
         this.userService = userService;
     }
@@ -48,7 +48,9 @@ public class ClearHistory extends Command<EmptySession> {
         User user = optionalUser.get();
         user.setChat(user.getChat()+1);
         userService.save(user);
-        bot.sendMessage(chatId, "ℹ️ История чата очищена.", SendV2.Parse.HTML);
+        bot.sendMessage(Send.Message.builder()
+                .chatId(chatId).text("ℹ️ История чата очищена.")
+                .build());
 
 
     }
