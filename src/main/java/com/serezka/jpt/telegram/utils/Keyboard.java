@@ -35,7 +35,7 @@ public class Keyboard {
 
     public static class Reply {
         public static final ReplyKeyboardMarkup DEFAULT = getCustomKeyboard(new String[][]{
-                {"ℹ️ О боте", "\uD83C\uDD98 Помогите!"},
+                {"ℹ️ О боте", "◻️ Помогите!"},
                 {"⚙️ Настройки чата","🗑️ Очистить историю"}
         });
 
@@ -45,7 +45,7 @@ public class Keyboard {
 
         public static ReplyKeyboardMarkup getDefault(User.BotMode botMode) {
             return getCustomKeyboard(new String[][]{
-                    {"ℹ️ О боте", "\uD83C\uDD98 Помогите!"},
+                    {"ℹ️ О боте", "◻️ Помогите!"},
                     {"⚙️ Настройки чата","🗑️ Очистить историю"}
             });
 

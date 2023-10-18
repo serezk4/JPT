@@ -76,11 +76,15 @@ public class TBot extends TelegramLongPollingBot {
     // ...
 
     // send methods
-    public Message sendMessage(long chatId, String text, Send.Parse parseMode) {
+    public Message sendMessage(long chatId, String text, SendV2.Parse parseMode) {
         return execute(SendV2.Message.build()
                 .chatId(chatId).text(text)
                 .parseMode(parseMode)
                 .build().get());
+    }
+
+    public Message sendMessage(SendV2.Message message) {
+        return execute(message.get());
     }
 
     public Message sendMessage(long chatId, String text) {

@@ -76,9 +76,6 @@ public class Profile extends Command<MenuSession> {
                                 new Button(String.format("\uD83C\uDF21️ Temp: %.1f", user.getTemperature()), "ignored"),
                                 new Button("⬆️ +0.1", "temp/+0.1", this)
                         },
-//                        {
-//                                new Button("\uD83D\uDDD1️ Очистить историю запросов", "remove_chat_history")
-//                        },
                         {
                                 new Button(exitWords.get(new Random().nextInt(exitWords.size())), Keyboard.Actions.CLOSE.getCallback())
                         }

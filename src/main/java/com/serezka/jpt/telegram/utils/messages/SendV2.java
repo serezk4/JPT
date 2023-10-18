@@ -2,24 +2,31 @@ package com.serezka.jpt.telegram.utils.messages;
 
 import com.serezka.jpt.telegram.utils.Keyboard;
 import jdk.jfr.Experimental;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NonNull;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.telegram.telegrambots.meta.api.methods.ParseMode;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 
 @Experimental
 public class SendV2 {
-    @Builder(builderMethodName = "build") @Getter
+    @AllArgsConstructor @Getter
+    @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+    public static enum Parse {
+        HTML(ParseMode.HTML), MARKDOWN(ParseMode.MARKDOWN), MARKDOWNV2(ParseMode.MARKDOWNV2);
+
+        String name;
+    }
+
+    @Builder(builderMethodName = "build")
+    @Getter
     @FieldDefaults(level = AccessLevel.PRIVATE)
     public static class Message {
         @NonNull Long chatId;
         @NonNull String text;
 
         int replyTo;
-        com.serezka.jpt.telegram.utils.Send.Parse parseMode;
+        Parse parseMode;
         @Builder.Default
         ReplyKeyboard replyKeyboard = Keyboard.Reply.DEFAULT;
 

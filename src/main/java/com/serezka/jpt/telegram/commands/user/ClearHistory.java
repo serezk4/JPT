@@ -6,6 +6,7 @@ import com.serezka.jpt.telegram.bot.TBot;
 import com.serezka.jpt.telegram.bot.TUpdate;
 import com.serezka.jpt.telegram.commands.Command;
 import com.serezka.jpt.telegram.sessions.types.empty.EmptySession;
+import com.serezka.jpt.telegram.utils.messages.SendV2;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
@@ -44,7 +45,7 @@ public class ClearHistory extends Command<EmptySession> {
         User user = optionalUser.get();
         user.setChat(user.getChat()+1);
         userService.save(user);
-        bot.sendMessage(chatId, "ℹ️ История чата очищена.");
+        bot.sendMessage(chatId, "ℹ️ История чата очищена.", SendV2.Parse.HTML);
 
 
     }

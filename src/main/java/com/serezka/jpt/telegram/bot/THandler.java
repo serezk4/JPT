@@ -14,6 +14,7 @@ import com.serezka.jpt.telegram.utils.AntiSpam;
 import com.serezka.jpt.telegram.utils.Keyboard;
 import com.serezka.jpt.telegram.utils.ReadOffice;
 import com.serezka.jpt.telegram.utils.Send;
+import com.serezka.jpt.telegram.utils.messages.SendV2;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -119,7 +120,7 @@ public class THandler {
         if (optionalSelected.isEmpty()) {
             // anti-spam system
             if (antiSpam.isSpam(user.getId(), 3) && !update.getSelf().hasCallbackQuery()) {
-                bot.sendMessage(chatId, "\uD83D\uDE21 <b>Не спамь!</b>");
+                bot.sendMessage(chatId, "\uD83D\uDE21 <b>Не спамь!</b>", SendV2.Parse.HTML);
                 return;
             }
 
@@ -151,7 +152,7 @@ public class THandler {
                     error.add("Пока что поддерживаются только форматы *.xls*, *.docx*, *.txt*.");
             }
 
-            int prepareMessageId = bot.sendMessage(chatId, "⌛ <i>Генерирую ответ... </i>").getMessageId();
+            int prepareMessageId = bot.sendMessage(chatId, "⌛ <i>Генерирую ответ...</i>", SendV2.Parse.HTML).getMessageId();
             String gptAnswer = gptUtil.completeQuery(chatId, text, GPTUtil.Formatting.TEXT);
 
             if (text.length() > 5000)

@@ -6,6 +6,7 @@ import com.serezka.jpt.telegram.sessions.manager.MenuManager;
 import com.serezka.jpt.telegram.sessions.types.Session;
 import com.serezka.jpt.telegram.utils.Keyboard;
 import com.serezka.jpt.telegram.utils.Send;
+import com.serezka.jpt.telegram.utils.messages.SendV2;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -77,7 +78,11 @@ public class MenuSession extends Session {
 
         // send answer
         if (getBotsMessagesIds().isEmpty())
-            getBotsMessagesIds().add(bot.sendMessage(update.getChatId(), pageData.getText(), keyboard).getMessageId());
+            getBotsMessagesIds().add(bot.sendMessage(
+                    SendV2.Message.build()
+                            .chatId(update.getChatId()).text(pageData.getText())
+                            .replyKeyboard(keyboard).parseMode(SendV2.Parse.HTML)
+                            .build()).getMessageId());
         else bot.execute(Send.edit(chatId, getBotsMessagesIds().peek(), pageData.getText(), keyboard));
 
         currentPage = nextPage;
@@ -94,7 +99,12 @@ public class MenuSession extends Session {
         InlineKeyboardMarkup keyboard = Keyboard.Inline.getStaticKeyboard(pageData.transferButtons(getId()));
 
         // send answer
-        getBotsMessagesIds().add(bot.sendMessage(update.getChatId(), pageData.getText(), keyboard).getMessageId());
+        getBotsMessagesIds().add(bot.sendMessage(
+                SendV2.Message.build()
+                        .chatId(update.getChatId()).text(pageData.getText())
+                        .replyKeyboard(keyboard).parseMode(SendV2.Parse.HTML)
+                        .build()
+        ).getMessageId());
     }
 
     @Override
