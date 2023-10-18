@@ -21,7 +21,9 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.io.Serializable;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 @Component
 @PropertySource("classpath:telegram.properties")
@@ -53,8 +55,11 @@ public class TBot extends TelegramLongPollingBot {
     public void onUpdateReceived(Update update) {
         TUpdate tupdate = new TUpdate(update);
 
+        log.info("NEW Update");
+
         // if executor is shutting down or terminated we can't process queries
         if (executor.isShutdown() || executor.isTerminated()) {
+            log.info("User {} {} trying to make query", tupdate.getUsername(), tupdate.getChatId());
             sendMessage(Send.Message.builder()
                     .chatId(tupdate.getChatId()).text("<b>Бот в данный момент выключается, запросы временно не принимаются.</b>")
                     .build());
@@ -66,50 +71,56 @@ public class TBot extends TelegramLongPollingBot {
     }
 
     /** Safety shutdown */
-    public void shutdown(TUpdate update) throws InterruptedException {
-        // hard check for developer
-        if (!update.getUsername().equals("serezkk")) return;
+    public void shutdown(TUpdate update) {
+        try {
+            // hard check for developer
+            if (!update.getUsername().equals("serezkk")) return;
 
-        // info users about shutdown
-        userService.findAll().forEach(user -> sendMessage(user.getChatId(), "ℹ️ <b>Бот выключается для обновления, отвечать не будет.</b>"));
+            log.info("Shutting down....");
 
-        // send message to dev that bot is shutting down
-        sendMessage(Send.Message.builder()
-                .chatId(update.getChatId()).text("⁉️ ADMIN: <b>Бот будет остановлен через 15 секунд</b>")
-                .build());
+            // info users about shutdown
+            userService.findAll().forEach(user -> sendMessage(user.getChatId(), "ℹ️ <b>Бот выключается для обновления, отвечать не будет.</b>"));
 
-        // start shutting down with executor
-        executor.shutdown();
-
-        // await for termination
-        if (!executor.awaitTermination(15, TimeUnit.SECONDS)) {
+            // send message to dev that bot is shutting down
             sendMessage(Send.Message.builder()
-                    .chatId(update.getChatId()).text("⁉️ ADMIN: <b>Некоторые запросы не были выполнены.</b>")
+                    .chatId(update.getChatId()).text("⁉️ ADMIN: <b>Бот будет остановлен через 15 секунд</b>")
                     .build());
 
-            log.info("Still waiting for executor...");
-            System.exit(444);
+            // start shutting down with executor
+            executor.shutdown();
+
+            // await for termination
+            if (!executor.awaitTermination(15, TimeUnit.SECONDS)) {
+                sendMessage(Send.Message.builder()
+                        .chatId(update.getChatId()).text("⁉️ ADMIN: <b>Некоторые запросы не были выполнены.</b>")
+                        .build());
+
+                log.info("Still waiting for executor...");
+
+                System.exit(444);
+            }
+
+            // send success message
+            sendMessage(Send.Message.builder()
+                    .chatId(update.getChatId()).text("ADMIN: ⁉️ <b>Бот успешно выключен!</b>")
+                    .build());
+
+            log.info("Exit normally!");
+            System.exit(0);
+        } catch (Exception e) {
+            log.warn("Error during shutting down: {}", e.getMessage());
         }
-
-        // send success message
-        sendMessage(Send.Message.builder()
-                .chatId(update.getChatId()).text("ADMIN: ⁉️ <b>Бот успешно выключен!</b>")
-                .build());
-
-        log.info("Exit normally!");
-        System.exit(0);
     }
 
     // send stuff
 
+    // todo make Optional
     @Override
     public <T extends Serializable, Method extends BotApiMethod<T>> T execute(Method method) {
         try {
-            log.info("Something sent to user...");
+            log.info("Executed method: {}", method.getClass().getSimpleName());
 
-            if (SendMessage.class.equals(method.getClass())) {
-                SendMessage parsed = (SendMessage) method;
-
+            if (method instanceof SendMessage parsed) {
                 if (parsed.getReplyMarkup() == null)
                     parsed.setReplyMarkup(Keyboard.Reply.getDefault());
 
@@ -152,7 +163,7 @@ public class TBot extends TelegramLongPollingBot {
         try {
             return execute(com.serezka.jpt.telegram.utils.methods.v1.Send.sticker(chatId, stickerId));
         } catch (TelegramApiException e) {
-            log.warn(e.getMessage());
+            log.warn("Error during execution: {}",e.getMessage());
             return null;
         }
     }

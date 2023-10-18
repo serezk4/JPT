@@ -10,7 +10,8 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
-@Component @Log4j2
+@Component
+@Log4j2
 public class Shutdown extends Command<EmptySession> {
     public Shutdown() {
         super(List.of("/shutdown"), "выключить бота", User.Role.ADMIN1.getAdminLvl());
@@ -23,10 +24,6 @@ public class Shutdown extends Command<EmptySession> {
 
     @Override
     public void execute(TBot bot, TUpdate update, List<String> history) {
-        try {
-            bot.shutdown(update);
-        } catch (InterruptedException e) {
-            log.warn(e.getMessage());
-        }
+        bot.shutdown(update);
     }
 }
