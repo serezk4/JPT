@@ -23,7 +23,11 @@ public class HelpMe extends Command<EmptySession> {
 
     @Override
     public void execute(TBot bot, TUpdate update, List<String> history) {
+        bot.deleteMessage(update.getChatId(), update.getMessageId());
+
         bot.sendMessage(update.getChatId(), """
+                <b>Самые частые проблемы:</b>
+                
                 ⁉️ <b>Странные ответы / Ответы на китайском?</b>
                  | Нажмите <code>\uD83D\uDDD1️ Очистить историю запросов</code>
                 
@@ -31,6 +35,8 @@ public class HelpMe extends Command<EmptySession> {
                 
                 ⁉️ <b>Бот не выдает ответ? Хотите предложить улучшение?</b>
                  | Напишите <b>@serezkk.</b>
+                 
+                 <i>Так же можно включить автоудаление сообщений в этом чате посредством самого telegram.</i>
                 """, SendV2.Parse.HTML);
     }
 }

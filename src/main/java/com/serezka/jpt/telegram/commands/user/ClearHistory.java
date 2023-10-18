@@ -34,6 +34,9 @@ public class ClearHistory extends Command<EmptySession> {
     @Override
     public void execute(TBot bot, TUpdate update, List<String> history) {
         long chatId = update.getChatId();
+        int messageId = update.getMessageId();
+
+        bot.deleteMessage(chatId, messageId);
 
         Optional<User> optionalUser = userService.findByChatId(chatId);
         if (optionalUser.isEmpty()) {
