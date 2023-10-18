@@ -3,14 +3,11 @@ package com.serezka.jpt;
 import com.serezka.jpt.telegram.commands.admin.CreateInvite;
 import com.serezka.jpt.telegram.commands.admin.GetQueries;
 import com.serezka.jpt.telegram.commands.admin.GetUsers;
+import com.serezka.jpt.telegram.commands.admin.Shutdown;
 import com.serezka.jpt.telegram.commands.user.ClearHistory;
 import com.serezka.jpt.telegram.commands.user.Github;
 import com.serezka.jpt.telegram.commands.user.HelpMe;
 import com.serezka.jpt.telegram.commands.user.Profile;
-import com.serezka.jpt.telegram.sessions.types.menu.Page;
-import com.serezka.jpt.telegram.utils.Keyboard;
-import com.serezka.jpt.telegram.utils.ReadOffice;
-import com.serezka.jpt.telegram.utils.Send;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -22,8 +19,7 @@ import com.serezka.jpt.telegram.bot.*;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 
-import java.io.File;
-import java.io.FileInputStream;
+import java.util.Optional;
 
 
 @SpringBootApplication
@@ -40,12 +36,13 @@ public class JptApplication implements ApplicationRunner {
     Profile profile;
     Github github;
     HelpMe helpMe;
+    ClearHistory clearHistory;
 
     // admin
     GetQueries getQueries;
     GetUsers getUsers;
     CreateInvite createInvite;
-    ClearHistory clearHistory;
+    Shutdown shutdown;
 
     // ..
 
@@ -55,6 +52,8 @@ public class JptApplication implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
+
+
         tHandler.addCommand(profile);
         tHandler.addCommand(github);
         tHandler.addCommand(helpMe);
@@ -63,6 +62,7 @@ public class JptApplication implements ApplicationRunner {
         tHandler.addCommand(getQueries);
         tHandler.addCommand(getUsers);
         tHandler.addCommand(createInvite);
+        tHandler.addCommand(shutdown);
 
         tBot.setTHandler(tHandler);
 

@@ -8,7 +8,7 @@ import com.serezka.jpt.telegram.bot.TUpdate;
 import com.serezka.jpt.telegram.commands.Command;
 import com.serezka.jpt.telegram.sessions.types.step.Step;
 import com.serezka.jpt.telegram.sessions.types.step.StepSession;
-import com.serezka.jpt.telegram.utils.Send;
+import com.serezka.jpt.telegram.utils.methods.v1.Send;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
@@ -17,7 +17,6 @@ import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.io.ByteArrayInputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.stream.Collectors;
 

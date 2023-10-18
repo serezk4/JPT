@@ -24,12 +24,10 @@ public class User {
 
     // -> bot settings for user
     Role role = Role.DEFAULT;
-    // <
 
     // -> gpt settings for user
-    Double temperature = 0.5;
+    Float temperature = 0.5F;
     Long chat = 0L;
-    // <
 
     @AllArgsConstructor
     @Getter

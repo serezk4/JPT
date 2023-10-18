@@ -5,7 +5,7 @@ import com.serezka.jpt.telegram.bot.TUpdate;
 import com.serezka.jpt.telegram.commands.Command;
 import com.serezka.jpt.telegram.sessions.manager.StepManager;
 import com.serezka.jpt.telegram.sessions.types.Session;
-import com.serezka.jpt.telegram.utils.Send;
+import com.serezka.jpt.telegram.utils.methods.v1.Send;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.experimental.FieldDefaults;

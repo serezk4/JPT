@@ -1,45 +1,46 @@
 package com.serezka.jpt.telegram.bot;
 
 import com.serezka.jpt.api.GPTUtil;
+
 import com.serezka.jpt.database.model.authorization.User;
 import com.serezka.jpt.database.service.authorization.InviteCodeService;
 import com.serezka.jpt.database.service.authorization.UserService;
+
 import com.serezka.jpt.telegram.commands.Command;
+
 import com.serezka.jpt.telegram.sessions.manager.MenuManager;
 import com.serezka.jpt.telegram.sessions.manager.StepManager;
 import com.serezka.jpt.telegram.sessions.types.Session;
 import com.serezka.jpt.telegram.sessions.types.menu.MenuSession;
 import com.serezka.jpt.telegram.sessions.types.step.StepSession;
+
 import com.serezka.jpt.telegram.utils.AntiSpam;
 import com.serezka.jpt.telegram.utils.Keyboard;
-import com.serezka.jpt.telegram.utils.ReadOffice;
-import com.serezka.jpt.telegram.utils.Send;
-import com.serezka.jpt.telegram.utils.messages.SendV2;
+import com.serezka.jpt.telegram.utils.Read;
+import com.serezka.jpt.telegram.utils.methods.v2.Send;
+
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
-import org.apache.poi.hssf.usermodel.HSSFSheet;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.springframework.beans.factory.annotation.Value;
+
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Controller;
+
 import org.telegram.telegrambots.meta.api.methods.GetFile;
 import org.telegram.telegrambots.meta.api.methods.ParseMode;
-import org.telegram.telegrambots.meta.api.objects.Chat;
 import org.telegram.telegrambots.meta.api.objects.Document;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 
-import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+
 import java.net.URI;
-import java.net.URL;
+
 import java.nio.charset.StandardCharsets;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -119,8 +120,11 @@ public class THandler {
 
         if (optionalSelected.isEmpty()) {
             // anti-spam system
-            if (antiSpam.isSpam(user.getId(), 3) && !update.getSelf().hasCallbackQuery()) {
-                bot.sendMessage(chatId, "\uD83D\uDE21 <b>Не спамь!</b>", SendV2.Parse.HTML);
+            if (antiSpam.isSpam(user) && !update.getSelf().hasCallbackQuery()) {
+                bot.sendMessage(Send.Message.builder()
+                        .chatId(chatId).text("\uD83D\uDE21 <b>Не спамь!</b>")
+                        .parseMode(Send.Parse.HTML)
+                        .build());
                 return;
             }
 
@@ -136,15 +140,15 @@ public class THandler {
 
                 // .xls:
                 if (filePath.endsWith(".xls"))
-                    documentData = ReadOffice.readExcel(fileIs);
+                    documentData = Read.excel(fileIs);
 
                 // .word
                 if (filePath.endsWith(".docx"))
-                    documentData = ReadOffice.readWord(fileIs);
+                    documentData = Read.word(fileIs);
 
                 // .txt
-                if (filePath.endsWith(".txt"))
-                    documentData = ReadOffice.readTxt(fileIs);
+                if (!(filePath.endsWith(".xls") && filePath.endsWith(".docx")))
+                    documentData = Read.file(fileIs);
 
                 if (documentData != null)
                     text += "[document]\n" + documentData;
@@ -152,16 +156,32 @@ public class THandler {
                     error.add("Пока что поддерживаются только форматы *.xls*, *.docx*, *.txt*.");
             }
 
-            int prepareMessageId = bot.sendMessage(chatId, "⌛ <i>Генерирую ответ...</i>", SendV2.Parse.HTML).getMessageId();
+            int prepareMessageId = bot.sendMessage(Send.Message.builder()
+                    .chatId(chatId).text("⌛ <i>Генерирую ответ...</i>")
+                    .parseMode(Send.Parse.HTML).build()).getMessageId();
             String gptAnswer = gptUtil.completeQuery(chatId, text, GPTUtil.Formatting.TEXT);
 
             if (text.length() > 5000)
                 error.add("*Запрос слишком длинный и не будет сохранен в историю*");
 
-            boolean isNull = bot.execute(Send.message(chatId, error.stream().map(s -> "⁉️ " + s + "\n\n").collect(Collectors.joining()) +
+            if (gptAnswer.contains("자세한 내용이 필요합니다.")) {
+                bot.sendMessage(Send.Message.builder()
+                        .text("""
+                                <b>Возможные проблемы с ответом:</b>
+                                                                
+                                ℹ️ <b>1.</b> <b>Данный тип файла</b> не поддерживается!
+                                ℹ️ <b>2.</b> Очистите <b>историю</b> - /clh
+                                                                
+                                <code>Если проблема останется - напишите</code> <b>@serezkk</b>
+                                """)
+                        .chatId(chatId).parseMode(Send.Parse.HTML)
+                        .build());
+            }
+
+            boolean isNull = bot.execute(com.serezka.jpt.telegram.utils.methods.v1.Send.message(chatId, error.stream().map(s -> "⁉️ " + s + "\n\n").collect(Collectors.joining()) +
                     "\uD83D\uDCAC " + gptAnswer, ParseMode.MARKDOWN, update.getMessageId())) == null;
             if (isNull) {
-                bot.execute(Send.document(chatId, new InputFile(
+                bot.execute(com.serezka.jpt.telegram.utils.methods.v1.Send.document(chatId, new InputFile(
                         new ByteArrayInputStream(("т.к. Telegram не может отобразить данный ответ, он в файле:\n\n" + gptAnswer)
                                 .getBytes(StandardCharsets.UTF_8)), "answer.txt"), update.getMessageId())
                 );
