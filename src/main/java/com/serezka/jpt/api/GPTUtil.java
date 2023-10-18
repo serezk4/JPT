@@ -24,7 +24,7 @@ public class GPTUtil {
     QueryService queryService;
 
     public enum Formatting {
-        TEXT;
+        TEXT;//todo HTML,..
     }
 
     public String completeQuery(long chatId, String query, Formatting formatting) throws IOException {

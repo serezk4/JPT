@@ -34,6 +34,11 @@ public class Keyboard {
     }
 
     public static class Reply {
+        public static final ReplyKeyboardMarkup DEFAULT = getCustomKeyboard(new String[][]{
+                {"ℹ️ О боте", "\uD83C\uDD98 Помогите!"},
+                {"⚙️ Настройки чата","🗑️ Очистить историю"}
+        });
+
         public static ReplyKeyboardMarkup getDefault() {
             return getDefault(User.BotMode.COMMANDS);
         }

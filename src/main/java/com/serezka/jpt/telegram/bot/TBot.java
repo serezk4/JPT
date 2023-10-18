@@ -2,6 +2,8 @@ package com.serezka.jpt.telegram.bot;
 
 import com.serezka.jpt.telegram.utils.Keyboard;
 import com.serezka.jpt.telegram.utils.Send;
+import com.serezka.jpt.telegram.utils.messages.SendV2;
+import jdk.jfr.Experimental;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -13,6 +15,7 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
+import org.telegram.telegrambots.meta.api.methods.ParseMode;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -73,16 +76,29 @@ public class TBot extends TelegramLongPollingBot {
     // ...
 
     // send methods
+    public Message sendMessage(long chatId, String text, Send.Parse parseMode) {
+        return execute(SendV2.Message.build()
+                .chatId(chatId).text(text)
+                .parseMode(parseMode)
+                .build().get());
+    }
 
     public Message sendMessage(long chatId, String text) {
-        return execute(Send.message(chatId, text));
+        return execute(SendV2.Message.build()
+                .chatId(chatId).text(text)
+                .build().get());
     }
 
     public Message sendMessage(long chatId, String text, ReplyKeyboard replyKeyboard) {
-        return execute(Send.message(chatId, text, replyKeyboard));
+        return execute(SendV2.Message.build()
+                .chatId(chatId).text(text)
+                .replyKeyboard(replyKeyboard)
+                .build().get());
     }
 
-    public void deleteMessage(long chatId, int messageId) {execute(Send.delete(chatId, messageId));}
+    public void deleteMessage(long chatId, int messageId) {
+        execute(Send.delete(chatId, messageId));
+    }
 
     public Message sendSticker(long chatId, String stickerId) {
         try {

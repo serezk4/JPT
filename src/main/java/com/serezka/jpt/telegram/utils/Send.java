@@ -1,5 +1,7 @@
 package com.serezka.jpt.telegram.utils;
 
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 import org.telegram.telegrambots.meta.api.methods.ParseMode;
 import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -10,8 +12,18 @@ import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageTe
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 
 public class Send {
+    @RequiredArgsConstructor
+    @Getter
+    @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+    public static enum Parse {
+        HTML(ParseMode.HTML), MARKDOWN(ParseMode.MARKDOWN), MARKDOWNV2(ParseMode.MARKDOWNV2);
+
+        String name;
+    }
+
     public static DeleteMessage delete(Long chatId, int messageId) {
         DeleteMessage deleteMessage = new DeleteMessage();
         deleteMessage.setMessageId(messageId);
@@ -21,7 +33,7 @@ public class Send {
     }
 
     public static SendDocument document(Long chatId, InputFile file, int replyTo) {
-        SendDocument sendDocument = document(chatId,file);
+        SendDocument sendDocument = document(chatId, file);
         sendDocument.setReplyToMessageId(replyTo);
 
         return sendDocument;
@@ -65,29 +77,21 @@ public class Send {
     }
 
     public static EditMessageText edit(Long chatId, int messageId, String newText) {
-        EditMessageText editMessageText = edit(chatId,messageId);
+        EditMessageText editMessageText = edit(chatId, messageId);
         editMessageText.setText(newText);
 
         return editMessageText;
     }
 
     public static EditMessageText edit(Long chatId, int messageId, String newText, InlineKeyboardMarkup inlineKeyboard) {
-        EditMessageText editMessageText = edit(chatId,messageId,newText);
+        EditMessageText editMessageText = edit(chatId, messageId, newText);
         editMessageText.setReplyMarkup(inlineKeyboard);
         editMessageText.setDisableWebPagePreview(true);
 
         return editMessageText;
     }
 
-    public static SendMessage messageWithoutParseMode(Long chatId, String text) {
-        SendMessage sm = new SendMessage();
-        sm.setChatId(String.valueOf(chatId));
-        sm.setText(text);
-        sm.setReplyMarkup(Keyboard.Reply.getDefault());
-        sm.setDisableWebPagePreview(true);
-
-        return sm;
-    }
+    // [Message]
 
     public static SendMessage message(Long chatId, String text, String parseMode, int replyTo) {
         SendMessage sm = new SendMessage();
@@ -101,11 +105,17 @@ public class Send {
         return sm;
     }
 
+    public static SendMessage message(Long chatId, String text, Parse parseMode) {
+        SendMessage sm = message(chatId, text);
+        sm.setParseMode(parseMode.getName());
+
+        return sm;
+    }
+
     public static SendMessage message(Long chatId, String text) {
         SendMessage sm = new SendMessage();
         sm.setChatId(String.valueOf(chatId));
         sm.setText(text);
-        sm.setParseMode(ParseMode.HTML);
         sm.setReplyMarkup(Keyboard.Reply.getDefault());
         sm.setDisableWebPagePreview(true);
 
@@ -113,18 +123,22 @@ public class Send {
     }
 
     public static SendMessage message(Long chatId, String text, int replyTo) {
-        SendMessage sm = message(chatId,text);
+        SendMessage sm = message(chatId, text);
         sm.setReplyToMessageId(replyTo);
 
         return sm;
     }
 
     public static SendMessage message(Long chatId, String text, ReplyKeyboard replyKeyboard) {
-        SendMessage sm = message(chatId,text);
+        SendMessage sm = message(chatId, text);
         sm.setReplyMarkup(replyKeyboard);
 
         return sm;
     }
+
+    // ------
+
+    // [Stickers]
 
     public static SendSticker sticker(Long chatId, String fileId) {
         SendSticker sendSticker = new SendSticker();
@@ -133,4 +147,13 @@ public class Send {
 
         return sendSticker;
     }
+
+    public static SendSticker sticker(Long chatId, String fileId, int replyTo) {
+        SendSticker sendSticker = sticker(chatId, fileId);
+        sendSticker.setReplyToMessageId(replyTo);
+
+        return sendSticker;
+    }
+
+    // ----
 }
