@@ -55,6 +55,7 @@ public class Board extends Command<StepSession> {
         userService.findAll().forEach(user -> {
             final int messageId = bot.sendMessage(Send.Message.builder()
                     .chatId(user.getChatId()).text(history.get(1))
+                    .disableNotification(true)
                     .build()).getMessageId();
 
             if (history.get(2).equalsIgnoreCase("да")) {
