@@ -5,14 +5,18 @@ import com.serezka.jpt.telegram.bot.TUpdate;
 import com.serezka.jpt.telegram.sessions.manager.MenuManager;
 import com.serezka.jpt.telegram.sessions.types.Session;
 import com.serezka.jpt.telegram.utils.Keyboard;
-import com.serezka.jpt.telegram.utils.methods.v2.Parse;
-import com.serezka.jpt.telegram.utils.methods.v2.Send;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
+import org.telegram.telegrambots.meta.api.methods.ParseMode;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Log4j2
@@ -75,12 +79,16 @@ public class MenuSession extends Session {
 
         // send answer
         if (getBotsMessagesIds().isEmpty())
-            getBotsMessagesIds().add(bot.sendMessage(
-                    Send.Message.builder()
+            getBotsMessagesIds().add(bot.execute(
+                    SendMessage.builder()
                             .chatId(update.getChatId()).text(pageData.getText())
-                            .replyKeyboard(keyboard).parseMode(Parse.HTML)
+                            .replyMarkup(keyboard).parseMode(ParseMode.HTML)
                             .build()).getMessageId());
-        else bot.execute(com.serezka.jpt.telegram.utils.methods.v1.Send.edit(chatId, getBotsMessagesIds().peek(), pageData.getText(), keyboard));
+
+        else bot.execute(EditMessageText.builder()
+                .chatId(chatId).messageId(getBotsMessagesIds().peek())
+                .text(pageData.getText()).parseMode(ParseMode.HTML)
+                .replyMarkup(keyboard).build());
 
         currentPage = nextPage;
     }
@@ -96,18 +104,23 @@ public class MenuSession extends Session {
         InlineKeyboardMarkup keyboard = Keyboard.Inline.getStaticKeyboard(pageData.transferButtons(getId()));
 
         // send answer
-        getBotsMessagesIds().add(bot.sendMessage(
-                Send.Message.builder()
+        getBotsMessagesIds().add(bot.execute(
+                SendMessage.builder()
                         .chatId(update.getChatId()).text(pageData.getText())
-                        .replyKeyboard(keyboard).parseMode(Parse.HTML)
+                        .replyMarkup(keyboard).parseMode(ParseMode.HTML)
                         .build()
         ).getMessageId());
     }
 
     @Override
     public void destroy(TBot bot, TUpdate update) {
-        getBotsMessagesIds().forEach(msgId -> bot.deleteMessage(update.getChatId(), msgId));
-        getUsersMessagesIds().forEach(msgId -> bot.deleteMessage(update.getChatId(), msgId));
+        getBotsMessagesIds().forEach(msgId -> bot.execute(DeleteMessage.builder()
+                .chatId(update.getChatId()).messageId(msgId)
+                .build()));
+
+        getUsersMessagesIds().forEach(msgId -> bot.execute(DeleteMessage.builder()
+                .chatId(update.getChatId()).messageId(msgId).build()));
+
         MenuManager.getInstance().destroySession(update.getChatId(), this);
     }
 
@@ -118,7 +131,8 @@ public class MenuSession extends Session {
 
         // delete user's message
         if (!isSaveUsersMessages() && !getUsersMessagesIds().isEmpty()) {
-            getUsersMessagesIds().forEach(messageId -> bot.deleteMessage(update.getChatId(), messageId));
+            getUsersMessagesIds().forEach(messageId -> bot.execute(DeleteMessage.builder()
+                    .chatId(update.getChatId()).messageId(messageId).build()));
             getUsersMessagesIds().clear();
         }
     }

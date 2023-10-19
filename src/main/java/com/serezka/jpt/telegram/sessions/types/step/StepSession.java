@@ -6,16 +6,17 @@ import com.serezka.jpt.telegram.commands.Command;
 import com.serezka.jpt.telegram.sessions.manager.StepManager;
 import com.serezka.jpt.telegram.sessions.types.Session;
 import com.serezka.jpt.telegram.utils.Keyboard;
-import com.serezka.jpt.telegram.utils.methods.v1.Send;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
 import org.telegram.telegrambots.meta.api.methods.ParseMode;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 
-import java.util.*;
+import java.util.List;
+import java.util.Stack;
 
 @Log4j2
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -57,11 +58,16 @@ public class StepSession extends Session {
         getUsersMessagesIds().add(update.getMessageId());
         getHistory().add(update.getText());
 
-        if (!isSaveUsersMessages()) bot.execute(Send.delete(update.getChatId(), update.getMessageId()));
+        if (!isSaveUsersMessages()) bot.execute(DeleteMessage.builder()
+                .chatId(update.getChatId()).messageId(update.getMessageId())
+                .build());
 
         String lastMessage = update.getText();
         if (lastMessage.equalsIgnoreCase(EXIT_SESSION)) {
-            getBotsMessagesIds().add(bot.sendMessage(update.getChatId(), "Закрыто").getMessageId());
+            getBotsMessagesIds().add(bot.execute(SendMessage.builder()
+                    .chatId(update.getChatId()).text("<b>Закрыто</b>")
+                    .parseMode(ParseMode.HTML)
+                    .build()).getMessageId());
             destroy(bot, update);
             return;
         }
@@ -90,7 +96,9 @@ public class StepSession extends Session {
 
     @Override
     public void destroy(TBot bot, TUpdate update) {
-        getBotsMessagesIds().forEach(msgId -> bot.execute(Send.delete(update.getChatId(), msgId)));
+        getBotsMessagesIds().forEach(msgId -> bot.execute(DeleteMessage.builder()
+                .chatId(update.getChatId()).messageId(msgId)
+                .build()));
 
         StepManager.getInstance().destroySession(update.getChatId());
     }

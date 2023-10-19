@@ -1,39 +1,28 @@
 package com.serezka.jpt.telegram.bot;
 
 import com.serezka.jpt.api.GPTUtil;
-
 import com.serezka.jpt.database.model.authorization.User;
 import com.serezka.jpt.database.service.authorization.InviteService;
 import com.serezka.jpt.database.service.authorization.UserService;
-
 import com.serezka.jpt.telegram.commands.Command;
-
 import com.serezka.jpt.telegram.sessions.manager.MenuManager;
 import com.serezka.jpt.telegram.sessions.manager.StepManager;
 import com.serezka.jpt.telegram.sessions.types.Session;
 import com.serezka.jpt.telegram.sessions.types.menu.MenuSession;
 import com.serezka.jpt.telegram.sessions.types.step.StepSession;
-
 import com.serezka.jpt.telegram.utils.AntiSpam;
 import com.serezka.jpt.telegram.utils.Keyboard;
 import com.serezka.jpt.telegram.utils.Read;
-import com.serezka.jpt.telegram.utils.methods.v2.Parse;
-import com.serezka.jpt.telegram.utils.methods.v2.Send;
-
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
-
-import org.cache2k.Cache;
-import org.cache2k.Cache2kBuilder;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Controller;
-
 import org.telegram.telegrambots.meta.api.methods.GetFile;
 import org.telegram.telegrambots.meta.api.methods.ParseMode;
+import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.objects.Document;
@@ -41,13 +30,9 @@ import org.telegram.telegrambots.meta.api.objects.InputFile;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-
 import java.net.URI;
-
 import java.nio.charset.StandardCharsets;
-
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Log4j2
@@ -84,7 +69,9 @@ public class THandler {
     public void process(TBot bot, TUpdate update) throws Exception {
         // -> validate query
         if (!TSettings.availableQueryTypes.contains(update.getQueryType())) {
-            bot.sendMessage(update.getChatId(), "Unknown query type");
+            bot.execute(SendMessage.builder()
+                    .chatId(update.getChatId()).text("Unknown query type")
+                    .build());
             return;
         }
 
@@ -215,16 +202,25 @@ public class THandler {
                         .build());
             }
 
-            boolean isNull = bot.execute(com.serezka.jpt.telegram.utils.methods.v1.Send.message(chatId, error.stream().map(s -> "⁉️ " + s + "\n\n").collect(Collectors.joining()) +
-                    "\uD83D\uDCAC " + gptAnswer, ParseMode.MARKDOWN, update.getMessageId())) == null;
+            boolean isNull = bot.execute(SendMessage.builder()
+                    .chatId(chatId).text(error.stream().map(s -> "⁉️ " + s + "\n\n").collect(Collectors.joining()) + "\uD83D\uDCAC " + gptAnswer)
+                    .replyToMessageId(update.getMessageId()).parseMode(ParseMode.MARKDOWN)
+                    .build()) == null;
+
             if (isNull) {
-                bot.execute(com.serezka.jpt.telegram.utils.methods.v1.Send.document(chatId, new InputFile(
-                        new ByteArrayInputStream(("т.к. Telegram не может отобразить данный ответ, он в файле:\n\n" + gptAnswer)
-                                .getBytes(StandardCharsets.UTF_8)), "answer.txt"), update.getMessageId())
-                );
+                bot.execute(SendDocument.builder()
+                        .chatId(chatId)
+                        .document(new InputFile(new ByteArrayInputStream(("т.к. Telegram не может отобразить данный ответ, он в файле:\n\n" + gptAnswer)
+                                .getBytes(StandardCharsets.UTF_8)), "answer.txt"))
+                        .replyToMessageId(update.getMessageId())
+                        .caption("\uD83D\uDCC1 <b>Из-за ограничений телеграма ответ в файле.</b>").parseMode(ParseMode.HTML)
+                        .build());
+
             }
 
-            bot.deleteMessage(chatId, prepareMessageId);
+            bot.execute(DeleteMessage.builder()
+                    .chatId(chatId).messageId(prepareMessageId)
+                    .build());
             return;
         }
 

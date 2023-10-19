@@ -5,11 +5,10 @@ import com.serezka.jpt.telegram.bot.TBot;
 import com.serezka.jpt.telegram.bot.TUpdate;
 import com.serezka.jpt.telegram.commands.Command;
 import com.serezka.jpt.telegram.sessions.types.empty.EmptySession;
-import com.serezka.jpt.telegram.utils.methods.v2.Parse;
-import com.serezka.jpt.telegram.utils.methods.v2.Send;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.ParseMode;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 
 import java.util.List;
 
@@ -43,7 +42,8 @@ public class HelpMe extends Command<EmptySession> {
                 """)
                 .parseMode(ParseMode.HTML).build());
 
-        bot.deleteMessage(update.getChatId(), update.getMessageId());
-
+        bot.execute(DeleteMessage.builder()
+                .chatId(update.getChatId()).messageId(update.getMessageId())
+                .build());
     }
 }

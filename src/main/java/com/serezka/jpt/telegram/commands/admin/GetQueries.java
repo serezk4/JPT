@@ -8,11 +8,13 @@ import com.serezka.jpt.telegram.bot.TUpdate;
 import com.serezka.jpt.telegram.commands.Command;
 import com.serezka.jpt.telegram.sessions.types.step.Step;
 import com.serezka.jpt.telegram.sessions.types.step.StepSession;
-import com.serezka.jpt.telegram.utils.methods.v1.Send;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Component;
+import org.telegram.telegrambots.meta.api.methods.ParseMode;
+import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
@@ -40,7 +42,9 @@ public class GetQueries extends Command<StepSession> {
     @Override
     public void execute(TBot bot, TUpdate update, List<String> history) {
         if (!history.get(1).matches("\\d+")) {
-            bot.sendMessage(update.getChatId(), "Введите числовое значение!");
+            bot.execute(SendMessage.builder()
+                    .chatId(update.getChatId()).text("Введите числовое значение!")
+                    .build());
             return;
         }
 
@@ -48,15 +52,21 @@ public class GetQueries extends Command<StepSession> {
         List<Query> queries = queryService.findAllByUserId(selectedUserID);
 
         if (queries.isEmpty()) {
-            bot.sendMessage(update.getChatId(), "Запросов от пользователя не найдено!\nУбедитесь в правильности ввода.");
+            bot.execute(SendMessage.builder()
+                    .chatId(update.getChatId()).text("Запросов от пользователя не найдено!\nУбедитесь в правильности ввода.")
+                    .build());
             return;
         }
 
         try {
-            bot.execute(Send.document(update.getChatId(),
-                    new InputFile(new ByteArrayInputStream(queries.stream().map(query -> String.format("Query: %s \nAnswer: %s\n-------------------------------------------\n",
+            bot.execute(SendDocument.builder()
+                    .chatId(update.getChatId())
+                    .document(new InputFile(new ByteArrayInputStream(queries.stream().map(query -> String.format("Query: %s \nAnswer: %s\n-------------------------------------------\n",
                             query.getQuery(), query.getAnswer())).collect(Collectors.joining()).getBytes()),
-                            "queries" + selectedUserID + ".txt")));
+                            "queries" + selectedUserID + ".txt"))
+                    .caption("<b>Запросы пользователя</b>")
+                    .parseMode(ParseMode.HTML)
+                    .build());
         } catch (TelegramApiException e) {
             log.warn(e.getMessage());
         }

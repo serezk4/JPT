@@ -9,11 +9,14 @@ import com.serezka.jpt.telegram.sessions.types.empty.EmptySession;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Component;
+import org.telegram.telegrambots.meta.api.methods.ParseMode;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Component @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Component
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class GetUsers extends Command<EmptySession> {
     UserService userService;
 
@@ -32,7 +35,10 @@ public class GetUsers extends Command<EmptySession> {
     public void execute(TBot bot, TUpdate update, List<String> history) {
         List<User> users = userService.findAll();
 
-        bot.sendMessage(update.getChatId(), "<b>Пользователи:</b>\n"+
-                users.stream().map(user -> String.format("\t#%d <b>%s</b>%n", user.getId(), user.getUsername())).collect(Collectors.joining()));
+        bot.execute(SendMessage.builder()
+                .chatId(update.getChatId())
+                .text("<b>Пользователи:</b>\n" + users.stream().map(user -> String.format("\t#%d <b>%s</b>%n", user.getId(), user.getUsername())).collect(Collectors.joining()))
+                .parseMode(ParseMode.HTML)
+                .build());
     }
 }

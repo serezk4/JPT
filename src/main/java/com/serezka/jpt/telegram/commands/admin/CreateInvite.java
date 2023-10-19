@@ -7,11 +7,14 @@ import com.serezka.jpt.database.service.authorization.InviteService;
 import com.serezka.jpt.telegram.bot.TBot;
 import com.serezka.jpt.telegram.bot.TUpdate;
 import com.serezka.jpt.telegram.commands.Command;
+import com.serezka.jpt.telegram.sessions.types.menu.Page;
 import com.serezka.jpt.telegram.sessions.types.step.Step;
 import com.serezka.jpt.telegram.sessions.types.step.StepSession;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Component;
+import org.telegram.telegrambots.meta.api.methods.ParseMode;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 
 import java.util.List;
 
@@ -41,12 +44,20 @@ public class CreateInvite extends Command<StepSession> {
     @Override
     public void execute(TBot bot, TUpdate update, List<String> history) {
         if (history.get(1).isEmpty() || !history.get(2).matches("\\d+")) {
-            bot.sendMessage(update.getChatId(), "\uD83D\uDEAB <b>Ошибка ввода</b>");
+            bot.execute(SendMessage.builder()
+                    .chatId(update.getChatId())
+                    .text("\uD83D\uDEAB <b>Ошибка ввода</b>")
+                    .parseMode(ParseMode.HTML)
+                    .build());
             return;
         }
 
         Invite newCode = inviteService.save(new Invite(history.get(1), Integer.parseInt(history.get(2))));
-        bot.sendMessage(update.getChatId(), String.format("\uD83C\uDD95 Добавлен новый <b>инвайт-код</b>:%n<code>#%d</code> <code>%s</code> - <code>%d использований</code>",
-                newCode.getId(), newCode.getCode(), newCode.getUsageCount()));
+        bot.execute(SendMessage.builder()
+                .chatId(update.getChatId())
+                .text(String.format("\uD83C\uDD95 Добавлен новый <b>инвайт-код</b>:%n<code>#%d</code> <code>%s</code> - <code>%d использований</code>",
+                        newCode.getId(), newCode.getCode(), newCode.getUsageCount()))
+                .parseMode(ParseMode.HTML)
+                .build());
     }
 }

@@ -2,11 +2,9 @@ package com.serezka.jpt.telegram.bot;
 
 import com.serezka.jpt.database.service.authorization.UserService;
 import com.serezka.jpt.telegram.utils.Keyboard;
-import com.serezka.jpt.telegram.utils.methods.v2.Send;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.SneakyThrows;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 import lombok.extern.log4j.Log4j2;
@@ -15,10 +13,9 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
+import org.telegram.telegrambots.meta.api.methods.ParseMode;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.io.Serializable;
@@ -57,13 +54,14 @@ public class TBot extends TelegramLongPollingBot {
     public void onUpdateReceived(Update update) {
         TUpdate tupdate = new TUpdate(update);
 
-        log.info("NEW Update");
+        log.info("[NEW] Update");
 
         // if executor is shutting down or terminated we can't process queries
         if (executor.isShutdown() || executor.isTerminated()) {
             log.info("User {} {} trying to make query", tupdate.getUsername(), tupdate.getChatId());
-            sendMessage(Send.Message.builder()
+            execute(SendMessage.builder()
                     .chatId(tupdate.getChatId()).text("\uD83D\uDD0C <b>Бот в данный момент выключается, запросы временно не принимаются.</b>")
+                    .parseMode(ParseMode.HTML)
                     .build());
             return;
         }
@@ -89,14 +87,15 @@ public class TBot extends TelegramLongPollingBot {
             log.info("Shutting down....");
 
             // info users about shutdown
-            userService.findAll().forEach(user -> sendMessage(Send.Message.builder()
+            userService.findAll().forEach(user -> execute(SendMessage.builder()
                     .chatId(user.getChatId()).text("ℹ️ <b>Бот выключается для обновления, отвечать не будет.</b>")
-                    .disableNotification(true)
+                    .parseMode(ParseMode.HTML).disableNotification(true)
                     .build()));
 
             // send message to dev that bot is shutting down
-            sendMessage(Send.Message.builder()
+            execute(SendMessage.builder()
                     .chatId(update.getChatId()).text("[adm]: <b>Бот будет остановлен через 15 секунд</b>")
+                    .parseMode(ParseMode.HTML)
                     .build());
 
             // start shutting down with executor
@@ -104,8 +103,9 @@ public class TBot extends TelegramLongPollingBot {
 
             // await for termination
             if (!executor.awaitTermination(15, TimeUnit.SECONDS)) {
-                sendMessage(Send.Message.builder()
+                execute(SendMessage.builder()
                         .chatId(update.getChatId()).text("[adm]: <b>Некоторые запросы не были выполнены.</b>")
+                        .parseMode(ParseMode.HTML)
                         .build());
 
                 log.info("Still waiting for executor...");
@@ -114,8 +114,9 @@ public class TBot extends TelegramLongPollingBot {
             }
 
             // send success message
-            sendMessage(Send.Message.builder()
+            execute(SendMessage.builder()
                     .chatId(update.getChatId()).text("ADMIN: ⁉️ <b>Бот успешно выключен!</b>")
+                    .parseMode(ParseMode.HTML)
                     .build());
 
             log.info("Exit normally!");
@@ -149,44 +150,12 @@ public class TBot extends TelegramLongPollingBot {
     }
 
     // ...
-    @Deprecated
-    public Message sendMessage(Send.Message message) {
-        return execute(message.get());
-    }
-
-    public Message sendMessage(long chatId, String text) {
-        return execute(SendMessage.builder()
-                .chatId(chatId).text(text)
-                .build());
-    }
-
-    public Message sendMessage(long chatId, String text, ReplyKeyboard replyKeyboard) {
-        return execute(Send.Message.builder()
-                .chatId(chatId).text(text)
-                .replyKeyboard(replyKeyboard)
-                .build().get());
-    }
-
-    public void deleteMessage(long chatId, int messageId) {
-        execute(com.serezka.jpt.telegram.utils.methods.v1.Send.delete(chatId, messageId));
-    }
-
-    public Message sendSticker(long chatId, String stickerId) {
-        try {
-            return execute(com.serezka.jpt.telegram.utils.methods.v1.Send.sticker(chatId, stickerId));
-        } catch (TelegramApiException e) {
-            log.warn("Error during execution: {}", e.getMessage());
-            return null;
-        }
-    }
-
-    // ...
 
     // utils
-    public void deleteLastMessageFromUser(TUpdate update) {
-        if (update.isUserMessage() &&            // check if message from user
-                update.getQueryType() == TUpdate.QueryType.MESSAGE) {  // check if message is text
-            deleteMessage(update.getChatId(), update.getMessageId());
-        }
-    }
+//    public void deleteLastMessageFromUser(TUpdate update) {
+//        if (update.isUserMessage() &&            // check if message from user
+//                update.getQueryType() == TUpdate.QueryType.MESSAGE) {  // check if message is text
+//            deleteMessage(update.getChatId(), update.getMessageId());
+//        }
+//    }
 }
