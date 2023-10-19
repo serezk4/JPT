@@ -5,6 +5,7 @@ import com.serezka.jpt.telegram.bot.TUpdate;
 import com.serezka.jpt.telegram.sessions.manager.MenuManager;
 import com.serezka.jpt.telegram.sessions.types.Session;
 import com.serezka.jpt.telegram.utils.Keyboard;
+import com.serezka.jpt.telegram.utils.methods.v2.Parse;
 import com.serezka.jpt.telegram.utils.methods.v2.Send;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
@@ -77,7 +78,7 @@ public class MenuSession extends Session {
             getBotsMessagesIds().add(bot.sendMessage(
                     Send.Message.builder()
                             .chatId(update.getChatId()).text(pageData.getText())
-                            .replyKeyboard(keyboard).parseMode(Send.Parse.HTML)
+                            .replyKeyboard(keyboard).parseMode(Parse.HTML)
                             .build()).getMessageId());
         else bot.execute(com.serezka.jpt.telegram.utils.methods.v1.Send.edit(chatId, getBotsMessagesIds().peek(), pageData.getText(), keyboard));
 
@@ -98,7 +99,7 @@ public class MenuSession extends Session {
         getBotsMessagesIds().add(bot.sendMessage(
                 Send.Message.builder()
                         .chatId(update.getChatId()).text(pageData.getText())
-                        .replyKeyboard(keyboard).parseMode(Send.Parse.HTML)
+                        .replyKeyboard(keyboard).parseMode(Parse.HTML)
                         .build()
         ).getMessageId());
     }

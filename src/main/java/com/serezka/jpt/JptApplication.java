@@ -16,6 +16,7 @@ import com.serezka.jpt.telegram.bot.*;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 
+import java.net.URI;
 import java.util.Optional;
 
 
@@ -50,7 +51,6 @@ public class JptApplication implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
-
 
         tHandler.addCommand(profile);
         tHandler.addCommand(github);

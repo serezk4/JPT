@@ -1,28 +1,18 @@
 package com.serezka.jpt.telegram.utils.methods.v2;
 
 import com.serezka.jpt.telegram.utils.Keyboard;
-import jdk.jfr.Experimental;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.telegram.telegrambots.meta.api.methods.ParseMode;
-import org.telegram.telegrambots.meta.api.methods.pinnedmessages.PinChatMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendSticker;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 
-@Experimental
+import java.util.Optional;
+
 public class Send {
-    @AllArgsConstructor
-    @Getter
-    @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-    public enum Parse {
-        HTML(ParseMode.HTML), MARKDOWN(ParseMode.MARKDOWN), MARKDOWNV2(ParseMode.MARKDOWNV2);
-
-        String name;
-    }
-
     @Builder @Getter
     @FieldDefaults(level = AccessLevel.PRIVATE)
     public static class Document{
@@ -31,7 +21,8 @@ public class Send {
 
         String caption;
 
-        int replyTo;
+        Integer replyTo;
+
         @Builder.Default
         ReplyKeyboard replyKeyboard = Keyboard.Reply.DEFAULT;
 
@@ -46,8 +37,8 @@ public class Send {
             sendDocument.setDocument(inputFile);
             sendDocument.setChatId(getChatId());
 
-            if (getReplyTo() != 0) sendDocument.setReplyToMessageId(getReplyTo());
-            if (getCaption() != null) sendDocument.setCaption(caption);
+            Optional.of(replyTo).ifPresent(sendDocument::setReplyToMessageId);
+            Optional.of(getCaption()).ifPresent(sendDocument::setCaption);
 
             sendDocument.setReplyMarkup(getReplyKeyboard());
             sendDocument.setDisableNotification(isDisableNotification());
@@ -64,7 +55,8 @@ public class Send {
         @NonNull Long chatId;
         @NonNull String fileId;
 
-        int replyTo;
+        Integer replyTo;
+
         @Builder.Default
         ReplyKeyboard replyKeyboard = Keyboard.Reply.DEFAULT;
 
@@ -77,7 +69,8 @@ public class Send {
             sendSticker.setSticker(new InputFile(fileId));
             sendSticker.setChatId(getChatId());
 
-            if (getReplyTo() != 0) sendSticker.setReplyToMessageId(getReplyTo());
+            Optional.ofNullable(getReplyTo()).ifPresent(sendSticker::setReplyToMessageId);
+
             sendSticker.setReplyMarkup(getReplyKeyboard());
             sendSticker.setDisableNotification(isDisableNotification());
 
@@ -91,7 +84,7 @@ public class Send {
         @NonNull Long chatId;
         @NonNull String text;
 
-        int replyTo;
+        Integer replyTo;
 
         @Builder.Default
         Parse parseMode = Parse.HTML;
@@ -110,8 +103,9 @@ public class Send {
             sendMessage.setText(getText());
             sendMessage.setChatId(getChatId());
 
-            if (getReplyTo() != 0) sendMessage.setReplyToMessageId(getReplyTo());
-            if (getParseMode() != null) sendMessage.setParseMode(getParseMode().getName());
+            Optional.ofNullable(getReplyTo()).ifPresent(sendMessage::setReplyToMessageId);
+            Optional.ofNullable(getParseMode()).ifPresent(parseMode -> sendMessage.setParseMode(parseMode.getName()));
+
             sendMessage.setReplyMarkup(getReplyKeyboard());
             sendMessage.setDisableWebPagePreview(isDisableWebPagePreview());
             sendMessage.setDisableNotification(isDisableNotification());

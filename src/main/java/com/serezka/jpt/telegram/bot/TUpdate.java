@@ -206,6 +206,7 @@ public class TUpdate {
     public String getText() {
         // stuff for webapp
         if (self.getMessage() != null && self.getMessage().getWebAppData() != null) return self.getMessage().getWebAppData().getData();
+        if (self.getMessage() != null && self.getMessage().getDocument() != null && self.getMessage().getCaption() != null) return self.getMessage().getCaption();
 
         return switch (queryType) {
             case MESSAGE -> self.getMessage().hasText() ? self.getMessage().getText() : null;

@@ -18,6 +18,12 @@ public class Read {
     public static final int height_limit = 200;
     public static final int max_sheets = 10;
 
+    public static String getData(InputStream is, String filePath) {
+        if (filePath.endsWith(".xls")) return excel(is);
+        if (filePath.endsWith(".docx")) return word(is);
+        return file(is);
+    }
+
     @SneakyThrows // < todo
     public static String excel(InputStream is) {
         Workbook workbook = new HSSFWorkbook(is);

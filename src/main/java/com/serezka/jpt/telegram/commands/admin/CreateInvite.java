@@ -1,9 +1,9 @@
 package com.serezka.jpt.telegram.commands.admin;
 
 import com.github.f4b6a3.uuid.UuidCreator;
-import com.serezka.jpt.database.model.authorization.InviteCode;
+import com.serezka.jpt.database.model.authorization.Invite;
 import com.serezka.jpt.database.model.authorization.User;
-import com.serezka.jpt.database.service.authorization.InviteCodeService;
+import com.serezka.jpt.database.service.authorization.InviteService;
 import com.serezka.jpt.telegram.bot.TBot;
 import com.serezka.jpt.telegram.bot.TUpdate;
 import com.serezka.jpt.telegram.commands.Command;
@@ -18,12 +18,12 @@ import java.util.List;
 @Component
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class CreateInvite extends Command<StepSession> {
-    InviteCodeService inviteCodeService;
+    InviteService inviteService;
 
-    public CreateInvite(InviteCodeService inviteCodeService) {
+    public CreateInvite(InviteService inviteService) {
         super(List.of("/invite"), "создать инвайт", User.Role.ADMIN1.getAdminLvl());
 
-        this.inviteCodeService = inviteCodeService;
+        this.inviteService = inviteService;
     }
 
     @Override
@@ -45,7 +45,7 @@ public class CreateInvite extends Command<StepSession> {
             return;
         }
 
-        InviteCode newCode = inviteCodeService.save(new InviteCode(history.get(1), Integer.parseInt(history.get(2))));
+        Invite newCode = inviteService.save(new Invite(history.get(1), Integer.parseInt(history.get(2))));
         bot.sendMessage(update.getChatId(), String.format("Добавлен новый <b>инвайт-код</b>:%n<code>#%d</code> <code>%s</code> - <code>%d использований</code>",
                 newCode.getId(), newCode.getCode(), newCode.getUsageCount()));
     }

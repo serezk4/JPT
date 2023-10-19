@@ -3,7 +3,7 @@ package com.serezka.jpt.telegram.bot;
 import com.serezka.jpt.api.GPTUtil;
 
 import com.serezka.jpt.database.model.authorization.User;
-import com.serezka.jpt.database.service.authorization.InviteCodeService;
+import com.serezka.jpt.database.service.authorization.InviteService;
 import com.serezka.jpt.database.service.authorization.UserService;
 
 import com.serezka.jpt.telegram.commands.Command;
@@ -17,6 +17,7 @@ import com.serezka.jpt.telegram.sessions.types.step.StepSession;
 import com.serezka.jpt.telegram.utils.AntiSpam;
 import com.serezka.jpt.telegram.utils.Keyboard;
 import com.serezka.jpt.telegram.utils.Read;
+import com.serezka.jpt.telegram.utils.methods.v2.Parse;
 import com.serezka.jpt.telegram.utils.methods.v2.Send;
 
 import lombok.AccessLevel;
@@ -26,11 +27,15 @@ import lombok.SneakyThrows;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
 
+import org.cache2k.Cache;
+import org.cache2k.Cache2kBuilder;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Controller;
 
 import org.telegram.telegrambots.meta.api.methods.GetFile;
 import org.telegram.telegrambots.meta.api.methods.ParseMode;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.objects.Document;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 
@@ -41,9 +46,8 @@ import java.net.URI;
 
 import java.nio.charset.StandardCharsets;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Log4j2
@@ -58,7 +62,7 @@ public class THandler {
 
     // database services
     UserService userService;
-    InviteCodeService inviteCodeService;
+    InviteService inviteService;
 
     // anti-spam services
     AntiSpam antiSpam;
@@ -69,6 +73,9 @@ public class THandler {
     // session services
     MenuManager menuManager = MenuManager.getInstance();
     StepManager stepManager = StepManager.getInstance();
+
+    // cache
+    Set<Long> authorized = Collections.newSetFromMap(new WeakHashMap<>());
 
     public void addCommand(Command<? extends Session> command) {
         commands.add(command);
@@ -82,29 +89,71 @@ public class THandler {
             return;
         }
 
-        // -> collect data
-        long chatId = update.getChatId();
-        String username = update.getUsername();
-        // TODO убрать ****-код
-        String text = new String((update.getText() != null ? update.getText() : (update.getSelf().getMessage().getCaption() == null ? "" : update.getSelf().getMessage().getCaption())).getBytes(), StandardCharsets.UTF_8);
-        TUpdate.QueryType queryType = update.getQueryType();
+        final long chatId = update.getChatId();
+        final String username = update.getUsername();
+        final String text = new String(update.getText().getBytes(), StandardCharsets.UTF_8);
+        final TUpdate.QueryType queryType = update.getQueryType();
 
         log.info(String.format("New Message: chatId[%s] username[%s] message[%s] | QType: %s", chatId, username, text, queryType.toString()));
 
-        // -> get user from database
-        if (!userService.existsByUsernameOrChatId(username, chatId) && !inviteCodeService.existsByCode(text)) {
-            bot.sendMessage(chatId, "Access denied");
+        // check auth
+        if (!authorized.contains(chatId) && !userService.existsByUsernameOrChatId(username, chatId) && !inviteService.existsByCode(text)) {
+            bot.execute(SendMessage.builder()
+                    .chatId(chatId).text("*Вы еще не авторизовались в боте.*\n_Введите токен, который вы получили:_")
+                    .parseMode(ParseMode.MARKDOWN)
+                    .build());
+
             return;
         }
 
-        Optional<User> optionalUser = userService.existsByChatId(chatId) ? userService.findByChatId(chatId) : userService.save(new User(chatId, username));
-        if (optionalUser.isEmpty()) {
+        if (!authorized.contains(chatId) && !userService.existsByUsernameOrChatId(username, chatId)) {
+            // if user entered token we will message him about it and add new row in database
+
+            bot.execute(DeleteMessage.builder()
+                    .chatId(chatId).messageId(update.getMessageId())
+                    .build());
+
+            bot.execute(SendMessage.builder()
+                    .chatId(chatId).text("✅ *Вы успешно авторизовались!*")
+                    .parseMode(ParseMode.MARKDOWN)
+                    .build());
+
+            bot.execute(SendMessage.builder()
+                    .chatId(chatId).text("""
+                            админ данного паблика *@serezkk*.
+                                                        
+                            ℹ️ Работает на модели *gpt-4*.
+                            ℹ️ *Поддерживает* _(практически)_ *все файлы для запросов*.
+                                   (.txt, .docx, .xml, .py, .cpp, ...)
+                            ℹ️ *Работает* `24/7` _(иногда выключается для обновления)_.
+                                                        
+                            *Нажимайте на кнопку* `\uD83D\uDDD1️ Очистить историю` *почаще*.
+                            """)
+                    .parseMode(ParseMode.MARKDOWN).build());
+
+            // save user to database
+            userService.save(new User(chatId, username));
+
+            return;
+        }
+
+        // get optional user
+        Optional<User> optionalUser = userService.findByChatId(chatId);
+        if (optionalUser.isEmpty()) { // check if returned user is present
             log.warn("User exception (can't find or create) | {} : {}", username, chatId);
+            bot.execute(SendMessage.builder()
+                    .chatId(chatId).text("*Проблемы с сервисами БД*\nНапишите *@serezkk* для устранения проблемы.")
+                    .parseMode(ParseMode.MARKDOWN).build());
             return;
         }
 
+        // add user to authorized list
+        authorized.add(chatId);
+
+        // get user
         User user = optionalUser.get();
 
+        // check for step & menu manager
         if (stepManager.containsSession(chatId) && queryType != TUpdate.QueryType.INLINE_QUERY) {
             stepManager.getSession(chatId).next(bot, update);
             return;
@@ -115,66 +164,54 @@ public class THandler {
             return;
         }
 
-        String finalText = text;
-        Optional<Command<? extends Session>> optionalSelected = commands.stream().filter(command -> command.getNames().contains(finalText)).findFirst();
+        Optional<Command<? extends Session>> optionalSelectedCommand = commands.stream()
+                .filter(command -> command.getNames().contains(text))
+                .findFirst();
 
-        if (optionalSelected.isEmpty()) {
+        if (optionalSelectedCommand.isEmpty()) {
             // anti-spam system
             if (antiSpam.isSpam(user) && !update.getSelf().hasCallbackQuery()) {
-                bot.sendMessage(Send.Message.builder()
-                        .chatId(chatId).text("\uD83D\uDE21 <b>Не спамь!</b>")
-                        .parseMode(Send.Parse.HTML)
+                bot.execute(SendMessage.builder()
+                        .chatId(chatId).text("\uD83D\uDE21 *Не спамь!*")
+                        .parseMode(ParseMode.MARKDOWN)
                         .build());
                 return;
             }
 
             List<String> error = new ArrayList<>();
 
+            String fileData = "";
             if (update.getSelf().hasMessage() && update.getSelf().getMessage().hasDocument()) {
                 Document document = update.getSelf().getMessage().getDocument();
 
-                String filePath = bot.execute(new GetFile(document.getFileId())).getFilePath();
-                InputStream fileIs = new URI("https://api.telegram.org/file/bot" + bot.getBotToken() + "/" + filePath).toURL().openStream();
+                String fileUrl = bot.execute(new GetFile(document.getFileId())).getFileUrl(bot.getBotToken());
+                InputStream fileIs = new URI(fileUrl).toURL().openStream();
 
-                String documentData = null;
-
-                // .xls:
-                if (filePath.endsWith(".xls"))
-                    documentData = Read.excel(fileIs);
-
-                // .word
-                if (filePath.endsWith(".docx"))
-                    documentData = Read.word(fileIs);
-
-                // .txt
-                if (!(filePath.endsWith(".xls") && filePath.endsWith(".docx")))
-                    documentData = Read.file(fileIs);
-
-                if (documentData != null)
-                    text += "[document]\n" + documentData;
-                else
-                    error.add("Пока что поддерживаются только форматы *.xls*, *.docx*, *.txt*.");
+                fileData = Read.getData(fileIs, fileUrl);
             }
 
-            int prepareMessageId = bot.sendMessage(Send.Message.builder()
-                    .chatId(chatId).text("⌛ <i>Генерирую ответ...</i>")
-                    .parseMode(Send.Parse.HTML).build()).getMessageId();
-            String gptAnswer = gptUtil.completeQuery(chatId, text, GPTUtil.Formatting.TEXT);
+            int prepareMessageId = bot.execute(SendMessage.builder()
+                    .chatId(chatId).text("⌛ _Генерирую ответ..._")
+                    .parseMode(ParseMode.MARKDOWN).build()).getMessageId();
+
+            String gptAnswer = gptUtil.completeQuery(chatId,
+                    text + (fileData.isEmpty() ? "" : "\n\n[document]\n" + fileData),
+                    GPTUtil.Formatting.TEXT);
 
             if (text.length() > 5000)
                 error.add("*Запрос слишком длинный и не будет сохранен в историю*");
 
             if (gptAnswer.contains("자세한 내용이 필요합니다.")) {
-                bot.sendMessage(Send.Message.builder()
+                bot.execute(SendMessage.builder()
                         .text("""
-                                <b>Возможные проблемы с ответом:</b>
+                                *Возможные проблемы с ответом:*
                                                                 
-                                ℹ️ <b>1.</b> <b>Данный тип файла</b> не поддерживается!
-                                ℹ️ <b>2.</b> Очистите <b>историю</b> - /clh
+                                ℹ️ *1.* <b>Данный тип файла* не поддерживается!
+                                ℹ️ *2.* Очистите *историю* - /clh
                                                                 
-                                <code>Если проблема останется - напишите</code> <b>@serezkk</b>
+                                `Если проблема останется - напишите` *@serezkk*
                                 """)
-                        .chatId(chatId).parseMode(Send.Parse.HTML)
+                        .chatId(chatId).parseMode(ParseMode.MARKDOWN)
                         .build());
             }
 
@@ -192,8 +229,8 @@ public class THandler {
         }
 
         // get selected command
-        Command<? extends Session> selected = optionalSelected.get();
-        Session session = selected.createSession();
+        Command<? extends Session> selectedCommand = optionalSelectedCommand.get();
+        Session session = selectedCommand.createSession();
 
         // add to session manager
         if (session instanceof MenuSession) menuManager.addSession((MenuSession) session, chatId);

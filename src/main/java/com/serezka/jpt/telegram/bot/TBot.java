@@ -6,6 +6,7 @@ import com.serezka.jpt.telegram.utils.methods.v2.Send;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.SneakyThrows;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 import lombok.extern.log4j.Log4j2;
@@ -33,7 +34,8 @@ import java.util.concurrent.TimeUnit;
 public class TBot extends TelegramLongPollingBot {
     String botUsername, botToken;
 
-    @NonFinal @Setter
+    @NonFinal
+    @Setter
     THandler tHandler;
 
     ExecutorService executor;
@@ -70,7 +72,9 @@ public class TBot extends TelegramLongPollingBot {
         executor.submit(() -> tHandler.process(this, new TUpdate(update)));
     }
 
-    /** Safety shutdown */
+    /**
+     * Safety shutdown
+     */
     public void shutdown(TUpdate update) {
         try {
             // hard check for developer
@@ -139,16 +143,15 @@ public class TBot extends TelegramLongPollingBot {
     }
 
     // ...
-
-    // send methods
+    @Deprecated
     public Message sendMessage(Send.Message message) {
         return execute(message.get());
     }
 
     public Message sendMessage(long chatId, String text) {
-        return execute(Send.Message.builder()
+        return execute(SendMessage.builder()
                 .chatId(chatId).text(text)
-                .build().get());
+                .build());
     }
 
     public Message sendMessage(long chatId, String text, ReplyKeyboard replyKeyboard) {
@@ -166,7 +169,7 @@ public class TBot extends TelegramLongPollingBot {
         try {
             return execute(com.serezka.jpt.telegram.utils.methods.v1.Send.sticker(chatId, stickerId));
         } catch (TelegramApiException e) {
-            log.warn("Error during execution: {}",e.getMessage());
+            log.warn("Error during execution: {}", e.getMessage());
             return null;
         }
     }
