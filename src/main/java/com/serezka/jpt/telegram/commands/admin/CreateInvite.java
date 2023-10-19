@@ -29,10 +29,10 @@ public class CreateInvite extends Command<StepSession> {
     @Override
     public StepSession createSession() {
         return new StepSession(List.of(
-                new Step((bot, update) -> new Step.Data("Укажите кол-во использований: ", new Step.Button.Reply[][]{
+                new Step((bot, update) -> new Step.Data("\uD83D\uDD22 <b>Укажите кол-во использований:</b>", new Step.Button.Reply[][]{
                         {new Step.Button.Reply("5"), new Step.Button.Reply("10"), new Step.Button.Reply("15")}
                 })),
-                new Step((bot, update) -> new Step.Data("Введите код:\n<i>выберите предложенный или введите свой...</i>", new Step.Button.Reply[][]{
+                new Step((bot, update) -> new Step.Data("\uD83D\uDD10 Введите код:\n<i>выберите предложенный или введите свой...</i>", new Step.Button.Reply[][]{
                         {new Step.Button.Reply(UuidCreator.getRandomBased().toString())}
                 }))
         ), this);
@@ -41,12 +41,12 @@ public class CreateInvite extends Command<StepSession> {
     @Override
     public void execute(TBot bot, TUpdate update, List<String> history) {
         if (history.get(1).isEmpty() || !history.get(2).matches("\\d+")) {
-            bot.sendMessage(update.getChatId(), "ошибка ввода");
+            bot.sendMessage(update.getChatId(), "\uD83D\uDEAB <b>Ошибка ввода</b>");
             return;
         }
 
         Invite newCode = inviteService.save(new Invite(history.get(1), Integer.parseInt(history.get(2))));
-        bot.sendMessage(update.getChatId(), String.format("Добавлен новый <b>инвайт-код</b>:%n<code>#%d</code> <code>%s</code> - <code>%d использований</code>",
+        bot.sendMessage(update.getChatId(), String.format("\uD83C\uDD95 Добавлен новый <b>инвайт-код</b>:%n<code>#%d</code> <code>%s</code> - <code>%d использований</code>",
                 newCode.getId(), newCode.getCode(), newCode.getUsageCount()));
     }
 }

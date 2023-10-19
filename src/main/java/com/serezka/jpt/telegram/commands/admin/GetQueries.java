@@ -34,7 +34,7 @@ public class GetQueries extends Command<StepSession> {
 
     @Override
     public StepSession createSession() {
-        return new StepSession(List.of(new Step((bot, update) -> new Step.Data("Введите <b>ID пользователя</b>"))), this);
+        return new StepSession(List.of(new Step((bot, update) -> new Step.Data("\uD83C\uDD94 Введите <b>ID пользователя</b>"))), this);
     }
 
     @Override

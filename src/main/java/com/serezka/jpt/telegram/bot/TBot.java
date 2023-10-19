@@ -63,13 +63,19 @@ public class TBot extends TelegramLongPollingBot {
         if (executor.isShutdown() || executor.isTerminated()) {
             log.info("User {} {} trying to make query", tupdate.getUsername(), tupdate.getChatId());
             sendMessage(Send.Message.builder()
-                    .chatId(tupdate.getChatId()).text("<b>Бот в данный момент выключается, запросы временно не принимаются.</b>")
+                    .chatId(tupdate.getChatId()).text("\uD83D\uDD0C <b>Бот в данный момент выключается, запросы временно не принимаются.</b>")
                     .build());
             return;
         }
 
         // send update to handler
-        executor.submit(() -> tHandler.process(this, new TUpdate(update)));
+        executor.submit(() -> {
+            try {
+                tHandler.process(this, new TUpdate(update));
+            } catch (Exception e) {
+                log.warn(e.getMessage());
+            }
+        });
     }
 
     /**
@@ -90,7 +96,7 @@ public class TBot extends TelegramLongPollingBot {
 
             // send message to dev that bot is shutting down
             sendMessage(Send.Message.builder()
-                    .chatId(update.getChatId()).text("⁉️ ADMIN: <b>Бот будет остановлен через 15 секунд</b>")
+                    .chatId(update.getChatId()).text("[adm]: <b>Бот будет остановлен через 15 секунд</b>")
                     .build());
 
             // start shutting down with executor
@@ -99,7 +105,7 @@ public class TBot extends TelegramLongPollingBot {
             // await for termination
             if (!executor.awaitTermination(15, TimeUnit.SECONDS)) {
                 sendMessage(Send.Message.builder()
-                        .chatId(update.getChatId()).text("⁉️ ADMIN: <b>Некоторые запросы не были выполнены.</b>")
+                        .chatId(update.getChatId()).text("[adm]: <b>Некоторые запросы не были выполнены.</b>")
                         .build());
 
                 log.info("Still waiting for executor...");

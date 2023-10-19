@@ -81,8 +81,7 @@ public class THandler {
         commands.add(command);
     }
 
-    @SneakyThrows
-    public void process(TBot bot, TUpdate update) {
+    public void process(TBot bot, TUpdate update) throws Exception {
         // -> validate query
         if (!TSettings.availableQueryTypes.contains(update.getQueryType())) {
             bot.sendMessage(update.getChatId(), "Unknown query type");
@@ -178,16 +177,17 @@ public class THandler {
                 return;
             }
 
+            // todo maybe remove list and replace with string
             List<String> error = new ArrayList<>();
 
-            String fileData = "";
+            String fileData = null;
             if (update.getSelf().hasMessage() && update.getSelf().getMessage().hasDocument()) {
                 Document document = update.getSelf().getMessage().getDocument();
 
                 String fileUrl = bot.execute(new GetFile(document.getFileId())).getFileUrl(bot.getBotToken());
                 InputStream fileIs = new URI(fileUrl).toURL().openStream();
 
-                fileData = Read.getData(fileIs, fileUrl);
+                fileData = "\n[document]\n" + Read.getData(fileIs, fileUrl);
             }
 
             int prepareMessageId = bot.execute(SendMessage.builder()
@@ -195,19 +195,19 @@ public class THandler {
                     .parseMode(ParseMode.MARKDOWN).build()).getMessageId();
 
             String gptAnswer = gptUtil.completeQuery(chatId,
-                    text + (fileData.isEmpty() ? "" : "\n\n[document]\n" + fileData),
+                    text + Optional.ofNullable(fileData).orElse(""),
                     GPTUtil.Formatting.TEXT);
 
             if (text.length() > 5000)
                 error.add("*Запрос слишком длинный и не будет сохранен в историю*");
 
-            if (gptAnswer.contains("자세한 내용이 필요합니다.")) {
+            if (gptAnswer.contains("자세한 내용이 필요합니다")) {
                 bot.execute(SendMessage.builder()
                         .text("""
                                 *Возможные проблемы с ответом:*
                                                                 
-                                ℹ️ *1.* <b>Данный тип файла* не поддерживается!
-                                ℹ️ *2.* Очистите *историю* - /clh
+                                1️⃣ <b>Данный тип файла* не поддерживается!
+                                2️⃣ Очистите *историю* - /clh
                                                                 
                                 `Если проблема останется - напишите` *@serezkk*
                                 """)

@@ -5,8 +5,11 @@ import com.serezka.jpt.telegram.bot.TBot;
 import com.serezka.jpt.telegram.bot.TUpdate;
 import com.serezka.jpt.telegram.commands.Command;
 import com.serezka.jpt.telegram.sessions.types.empty.EmptySession;
+import com.serezka.jpt.telegram.utils.methods.v2.Parse;
 import com.serezka.jpt.telegram.utils.methods.v2.Send;
 import org.springframework.stereotype.Component;
+import org.telegram.telegrambots.meta.api.methods.ParseMode;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 
 import java.util.List;
 
@@ -23,9 +26,9 @@ public class HelpMe extends Command<EmptySession> {
 
     @Override
     public void execute(TBot bot, TUpdate update, List<String> history) {
-        bot.deleteMessage(update.getChatId(), update.getMessageId());
 
-        bot.sendMessage(Send.Message.builder().chatId(update.getChatId()).text( """
+        bot.execute(SendMessage.builder()
+                .chatId(update.getChatId()).text( """
                 <b>Самые частые проблемы:</b>
                 
                 ⁉️ <b>Странные ответы / Ответы на китайском?</b>
@@ -37,6 +40,10 @@ public class HelpMe extends Command<EmptySession> {
                  | Напишите <b>@serezkk.</b>
                  
                  <i>Так же можно включить автоудаление сообщений в этом чате посредством самого telegram.</i>
-                """).build());
+                """)
+                .parseMode(ParseMode.HTML).build());
+
+        bot.deleteMessage(update.getChatId(), update.getMessageId());
+
     }
 }

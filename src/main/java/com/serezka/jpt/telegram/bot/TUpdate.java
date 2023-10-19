@@ -11,6 +11,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Getter
@@ -44,7 +45,7 @@ public class TUpdate {
         FORWARD_SIGNATURE, MEDIA_GROUP_ID, CONNECTED_WEBSITE, PASSPORT_DATA, FORWARD_SENDER_NAME,
         POLL, REPLY_MARKUP, DICE, VIA_BOT, SENDER_CHAT, PROXIMITY_ALERT_TRIGGERED, MESSAGE_AUTO_DELETE_TIMER_CHANGED,
         IS_AUTOMATIC_FORWARD, HAS_PROTECTED_CONTENT, WEB_APP_DATA, VIDEO_CHAT_STARTED, VIDEO_CHAT_ENDED,
-        VIDE_CHAT_PARTICIPANTS_INVITED ,VIDEO_CHAT_SCHEDULED, IS_TOPIC_MESSAGE, FORUM_TOPIC_CREATED, FORUM_TOPIC_CLOSED,
+        VIDE_CHAT_PARTICIPANTS_INVITED, VIDEO_CHAT_SCHEDULED, IS_TOPIC_MESSAGE, FORUM_TOPIC_CREATED, FORUM_TOPIC_CLOSED,
         FORUM_TOPIC_REOPENED, FORUM_TOPIC_EDITED, GENERAL_FORUM_TOPIC_HIDDEN, GENERAL_FORUM_TOPIC_UNHIDDEN,
         WRITE_ACCESS_ALLOWED, HAS_MEDIA_SPOILER, USER_SHARED, CHAT_SHARED, UNKNOWN;
     }
@@ -104,8 +105,10 @@ public class TUpdate {
         if (message.getSenderChat() != null) flags.add(Flag.SENDER_CHAT);
         if (message.getProximityAlertTriggered() != null) flags.add(Flag.PROXIMITY_ALERT_TRIGGERED);
         if (message.getMessageAutoDeleteTimerChanged() != null) flags.add(Flag.MESSAGE_AUTO_DELETE_TIMER_CHANGED);
-        if (message.getIsAutomaticForward() != null && message.getIsAutomaticForward()) flags.add(Flag.IS_AUTOMATIC_FORWARD);
-        if (message.getHasProtectedContent() != null && message.getHasProtectedContent()) flags.add(Flag.HAS_PROTECTED_CONTENT);
+        if (message.getIsAutomaticForward() != null && message.getIsAutomaticForward())
+            flags.add(Flag.IS_AUTOMATIC_FORWARD);
+        if (message.getHasProtectedContent() != null && message.getHasProtectedContent())
+            flags.add(Flag.HAS_PROTECTED_CONTENT);
         if (message.getWebAppData() != null) flags.add(Flag.WEB_APP_DATA);
         if (message.getVideoChatStarted() != null) flags.add(Flag.VIDEO_CHAT_STARTED);
         if (message.getVideoChatEnded() != null) flags.add(Flag.VIDEO_CHAT_ENDED);
@@ -205,8 +208,10 @@ public class TUpdate {
 
     public String getText() {
         // stuff for webapp
-        if (self.getMessage() != null && self.getMessage().getWebAppData() != null) return self.getMessage().getWebAppData().getData();
-        if (self.getMessage() != null && self.getMessage().getDocument() != null && self.getMessage().getCaption() != null) return self.getMessage().getCaption();
+        if (self.getMessage() != null && self.getMessage().getWebAppData() != null)
+            return self.getMessage().getWebAppData().getData();
+        if (self.hasMessage() && self.getMessage().hasDocument())
+            return Optional.ofNullable(self.getMessage().getCaption()).orElse("");
 
         return switch (queryType) {
             case MESSAGE -> self.getMessage().hasText() ? self.getMessage().getText() : null;

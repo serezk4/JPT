@@ -11,6 +11,8 @@ import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Component;
+import org.telegram.telegrambots.meta.api.methods.ParseMode;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 
 import java.util.List;
 import java.util.Optional;
@@ -36,8 +38,6 @@ public class ClearHistory extends Command<EmptySession> {
         long chatId = update.getChatId();
         int messageId = update.getMessageId();
 
-        bot.deleteMessage(chatId, messageId);
-
         Optional<User> optionalUser = userService.findByChatId(chatId);
         if (optionalUser.isEmpty()) {
             bot.sendMessage(chatId, "Пользователь не найден.");
@@ -48,10 +48,11 @@ public class ClearHistory extends Command<EmptySession> {
         User user = optionalUser.get();
         user.setChat(user.getChat()+1);
         userService.save(user);
-        bot.sendMessage(Send.Message.builder()
-                .chatId(chatId).text("ℹ️ История чата очищена.")
+        bot.execute(SendMessage.builder()
+                .chatId(chatId).text("ℹ️ *История чата очищена.*")
+                .parseMode(ParseMode.MARKDOWN)
                 .build());
 
-
+        bot.deleteMessage(chatId, messageId);
     }
 }

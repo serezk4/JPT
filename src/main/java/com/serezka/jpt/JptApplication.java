@@ -16,9 +16,6 @@ import com.serezka.jpt.telegram.bot.*;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 
-import java.net.URI;
-import java.util.Optional;
-
 
 @SpringBootApplication
 @RequiredArgsConstructor
@@ -41,7 +38,7 @@ public class JptApplication implements ApplicationRunner {
     GetUsers getUsers;
     CreateInvite createInvite;
     Shutdown shutdown;
-    Board board;
+    Cast cast;
 
     // ..
 
@@ -61,7 +58,7 @@ public class JptApplication implements ApplicationRunner {
         tHandler.addCommand(getUsers);
         tHandler.addCommand(createInvite);
         tHandler.addCommand(shutdown);
-        tHandler.addCommand(board);
+        tHandler.addCommand(cast);
 
         tBot.setTHandler(tHandler);
 

@@ -12,18 +12,20 @@ import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Component;
+import org.telegram.telegrambots.meta.api.methods.ParseMode;
 import org.telegram.telegrambots.meta.api.methods.pinnedmessages.PinChatMessage;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 
 import java.util.List;
 
 @Component
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Log4j2
-public class Board extends Command<StepSession> {
+public class Cast extends Command<StepSession> {
     UserService userService;
 
-    public Board(UserService userService) {
-        super(List.of("/board"), "сделать объявление", User.Role.ADMIN1.getAdminLvl());
+    public Cast(UserService userService) {
+        super(List.of("/cast"), "сделать объявление", User.Role.ADMIN1.getAdminLvl());
 
         this.userService = userService;
     }
@@ -31,9 +33,9 @@ public class Board extends Command<StepSession> {
     @Override
     public StepSession createSession() {
         return new StepSession(List.of(
-                new Step((bot, update) -> new Step.Data("Вы уверены? Да/Нет")),
-                new Step((bot, update) -> new Step.Data("Закрепить? Да/Нет")),
-                new Step((bot, update) -> new Step.Data("Введите объявление:"))
+                new Step((bot, update) -> new Step.Data("\uD83E\uDD14 Вы уверены? <code>Да/Нет</code>")),
+                new Step((bot, update) -> new Step.Data("\uD83D\uDCCC Закрепить? <code>Да/Нет</code>")),
+                new Step((bot, update) -> new Step.Data("\uD83D\uDCDD Введите объявление:"))
         ), this);
     }
 
@@ -45,17 +47,18 @@ public class Board extends Command<StepSession> {
         }
 
         if (!history.get(3).equalsIgnoreCase("да")) {
-            bot.sendMessage(Send.Message.builder()
-                    .chatId(update.getChatId()).text("Отменено")
+            bot.execute(SendMessage.builder()
+                    .chatId(update.getChatId()).text("❎ *Отменено*")
+                            .parseMode(ParseMode.MARKDOWN)
                     .build());
             return;
         }
 
         // todo delay (when < 100 users - ignore -_-)
         userService.findAll().forEach(user -> {
-            final int messageId = bot.sendMessage(Send.Message.builder()
+            final int messageId = bot.execute(SendMessage.builder()
                     .chatId(user.getChatId()).text(history.get(1))
-                    .disableNotification(true)
+                    .disableNotification(true).parseMode(ParseMode.MARKDOWN)
                     .build()).getMessageId();
 
             if (history.get(2).equalsIgnoreCase("да")) {

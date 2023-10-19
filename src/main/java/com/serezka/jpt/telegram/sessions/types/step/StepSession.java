@@ -5,11 +5,14 @@ import com.serezka.jpt.telegram.bot.TUpdate;
 import com.serezka.jpt.telegram.commands.Command;
 import com.serezka.jpt.telegram.sessions.manager.StepManager;
 import com.serezka.jpt.telegram.sessions.types.Session;
+import com.serezka.jpt.telegram.utils.Keyboard;
 import com.serezka.jpt.telegram.utils.methods.v1.Send;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
+import org.telegram.telegrambots.meta.api.methods.ParseMode;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 
 import java.util.*;
@@ -40,12 +43,12 @@ public class StepSession extends Session {
 
         this.steps = new Stack<>();
         this.steps.addAll(init);
-        
+
         this.command = command;
     }
 
     public StepSession(List<Step> steps, Command<StepSession> command, boolean saveUsersMessages) {
-        this(steps,command);
+        this(steps, command);
         setSaveUsersMessages(saveUsersMessages);
     }
 
@@ -76,8 +79,13 @@ public class StepSession extends Session {
         ReplyKeyboardMarkup replyKeyboard = data.transferButtons();
         String text = data.getText();
 
-        if (replyKeyboard == null) getBotsMessagesIds().add(bot.sendMessage(update.getChatId(), text).getMessageId());
-        else getBotsMessagesIds().add(bot.sendMessage(update.getChatId(), text, replyKeyboard).getMessageId());
+        if (replyKeyboard == null) getBotsMessagesIds().add(bot.execute(SendMessage.builder()
+                .chatId(update.getChatId()).text(text)
+                .parseMode(ParseMode.HTML).replyMarkup(Keyboard.Reply.DEFAULT)
+                .build()).getMessageId());
+        else getBotsMessagesIds().add(bot.execute(SendMessage.builder()
+                .chatId(update.getChatId()).text(text)
+                .parseMode(ParseMode.HTML).replyMarkup(replyKeyboard).build()).getMessageId());
     }
 
     @Override
