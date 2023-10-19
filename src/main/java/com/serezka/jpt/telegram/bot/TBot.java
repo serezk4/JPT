@@ -79,7 +79,10 @@ public class TBot extends TelegramLongPollingBot {
             log.info("Shutting down....");
 
             // info users about shutdown
-            userService.findAll().forEach(user -> sendMessage(user.getChatId(), "ℹ️ <b>Бот выключается для обновления, отвечать не будет.</b>"));
+            userService.findAll().forEach(user -> sendMessage(Send.Message.builder()
+                    .chatId(user.getChatId()).text("ℹ️ <b>Бот выключается для обновления, отвечать не будет.</b>")
+                    .disableNotification(true)
+                    .build()));
 
             // send message to dev that bot is shutting down
             sendMessage(Send.Message.builder()
