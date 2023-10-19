@@ -8,6 +8,7 @@ import com.serezka.jpt.telegram.bot.TUpdate;
 import com.serezka.jpt.telegram.commands.Command;
 import com.serezka.jpt.telegram.sessions.types.step.Step;
 import com.serezka.jpt.telegram.sessions.types.step.StepSession;
+import com.serezka.jpt.telegram.utils.Keyboard;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
@@ -65,6 +66,7 @@ public class GetQueries extends Command<StepSession> {
                             query.getQuery(), query.getAnswer())).collect(Collectors.joining()).getBytes()),
                             "queries" + selectedUserID + ".txt"))
                     .caption("<b>Запросы пользователя</b>")
+                    .replyMarkup(Keyboard.Reply.DEFAULT)
                     .parseMode(ParseMode.HTML)
                     .build());
         } catch (TelegramApiException e) {

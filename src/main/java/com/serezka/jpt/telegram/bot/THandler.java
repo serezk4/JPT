@@ -204,7 +204,8 @@ public class THandler {
 
             boolean isNull = bot.execute(SendMessage.builder()
                     .chatId(chatId).text(error.stream().map(s -> "⁉️ " + s + "\n\n").collect(Collectors.joining()) + "\uD83D\uDCAC " + gptAnswer)
-                    .replyToMessageId(update.getMessageId()).parseMode(ParseMode.MARKDOWN)
+                    .replyToMessageId(update.getMessageId())
+                    .parseMode(ParseMode.MARKDOWN)
                     .build()) == null;
 
             if (isNull) {
@@ -214,8 +215,8 @@ public class THandler {
                                 .getBytes(StandardCharsets.UTF_8)), "answer.txt"))
                         .replyToMessageId(update.getMessageId())
                         .caption("\uD83D\uDCC1 <b>Из-за ограничений телеграма ответ в файле.</b>").parseMode(ParseMode.HTML)
+                        .replyMarkup(Keyboard.Reply.DEFAULT)
                         .build());
-
             }
 
             bot.execute(DeleteMessage.builder()
@@ -236,6 +237,7 @@ public class THandler {
         session.next(bot, update);
     }
 
+    @Deprecated // for this bot
     public String getHelp(int adminLvl) {
         StringBuilder help = new StringBuilder("Кажется, вы ошиблись в команде. Список допустимых команд:\n");
         help.append(commands.stream()

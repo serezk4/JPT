@@ -31,8 +31,7 @@ import java.util.concurrent.TimeUnit;
 public class TBot extends TelegramLongPollingBot {
     String botUsername, botToken;
 
-    @NonFinal
-    @Setter
+    @NonFinal @Setter
     THandler tHandler;
 
     ExecutorService executor;
@@ -148,14 +147,4 @@ public class TBot extends TelegramLongPollingBot {
             return null;
         }
     }
-
-    // ...
-
-    // utils
-//    public void deleteLastMessageFromUser(TUpdate update) {
-//        if (update.isUserMessage() &&            // check if message from user
-//                update.getQueryType() == TUpdate.QueryType.MESSAGE) {  // check if message is text
-//            deleteMessage(update.getChatId(), update.getMessageId());
-//        }
-//    }
 }
