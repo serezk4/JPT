@@ -1,6 +1,6 @@
 package com.serezka.jpt.telegram.utils;
 
-import com.serezka.jpt.database.model.authorization.User;
+import com.serezka.jpt.database.model.User;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;

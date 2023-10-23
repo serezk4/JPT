@@ -48,7 +48,6 @@ public class JptApplication implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
-
         tHandler.addCommand(profile);
         tHandler.addCommand(github);
         tHandler.addCommand(helpMe);

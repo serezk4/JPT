@@ -1,9 +1,9 @@
 package com.serezka.jpt.api;
 
-import com.serezka.jpt.database.model.authorization.User;
-import com.serezka.jpt.database.model.gpt.Query;
-import com.serezka.jpt.database.service.authorization.UserService;
-import com.serezka.jpt.database.service.gpt.QueryService;
+import com.serezka.jpt.database.model.User;
+import com.serezka.jpt.database.model.Query;
+import com.serezka.jpt.database.service.UserService;
+import com.serezka.jpt.database.service.QueryService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -11,7 +11,6 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 @Component

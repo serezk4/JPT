@@ -1,8 +1,10 @@
 package com.serezka.jpt.telegram.commands.user;
 
-import com.serezka.jpt.database.model.authorization.User;
-import com.serezka.jpt.database.service.authorization.UserService;
-import com.serezka.jpt.database.service.gpt.QueryService;
+import com.serezka.jpt.database.model.Subscription;
+import com.serezka.jpt.database.model.User;
+import com.serezka.jpt.database.service.SubscriptionService;
+import com.serezka.jpt.database.service.UserService;
+import com.serezka.jpt.database.service.QueryService;
 import com.serezka.jpt.telegram.bot.TBot;
 import com.serezka.jpt.telegram.bot.TUpdate;
 import com.serezka.jpt.telegram.commands.Command;
@@ -23,7 +25,7 @@ public class Profile extends Command<MenuSession> {
     ProfilePage profilePage;
 
     public Profile(ProfilePage profilePage) {
-        super(List.of("⚙️ Настройки чата"), "настройки чата", User.Role.DEFAULT.getAdminLvl());
+        super(List.of("\uD83C\uDD94 Профиль"), "настройки чата", User.Role.DEFAULT.getAdminLvl());
 
         this.profilePage = profilePage;
     }
@@ -38,13 +40,15 @@ public class Profile extends Command<MenuSession> {
     public static class ProfilePage extends Page {
         private static final String TEMPLATE = """
                 <b>Имя:</b> <i>%s</i>
+                <b>Подписка</b>: <i>%s</i>
+                <b>Осталось запросов</b>: <i>%s</i>
                 <b>Кол-во запросов:</b> <i>%d</i>
                 %s
                 """;
 
         private static final List<String> exitWords = List.of("Закрыть менюшку", "Уйди!", "Закрыть окно");
 
-        public ProfilePage(UserService userService, QueryService queryService) {
+        public ProfilePage(UserService userService, QueryService queryService, SubscriptionService subscriptionService) {
 
             setGenerator((bot, update, callback, page) -> {
                 long chatId = update.getChatId();
@@ -53,6 +57,11 @@ public class Profile extends Command<MenuSession> {
                 if (optionalUser.isEmpty())
                     return new Data("Error: can't find user", new Button[][]{{new Button(Keyboard.Actions.CLOSE.getName(), Keyboard.Actions.CLOSE.getCallback())}});
                 User user = optionalUser.get();
+
+                Optional<Subscription> optionalSubscription = subscriptionService.findById(user.getSubscriptionId());
+                if (optionalSubscription.isEmpty())
+                    return new Data("Error: can't optionalSubscription", new Button[][]{{new Button(Keyboard.Actions.CLOSE.getName(), Keyboard.Actions.CLOSE.getCallback())}});
+                Subscription subscription = optionalSubscription.get();
 
                 String incall = "";
                 if (callback != null && callback.startsWith("temp/") && callback.matches("temp/[+-]\\d.\\d$")) {
@@ -69,7 +78,8 @@ public class Profile extends Command<MenuSession> {
                     userService.save(user);
                 }
 
-                return new Data(String.format(TEMPLATE, user.getUsername(), queryService.countAllByUserId(user.getId()), incall)
+                return new Data(String.format(TEMPLATE,
+                        user.getUsername(), subscription.getName(), subscription.getUsagesCount(), queryService.countAllByUserId(user.getId()), incall)
                         , new Button[][]{
                         {
                                 new Button("⬇️ -0.1", "temp/-0.1", this),

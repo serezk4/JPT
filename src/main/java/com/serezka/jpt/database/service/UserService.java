@@ -1,7 +1,7 @@
-package com.serezka.jpt.database.service.authorization;
+package com.serezka.jpt.database.service;
 
-import com.serezka.jpt.database.model.authorization.User;
-import com.serezka.jpt.database.repository.authorization.UserRepository;
+import com.serezka.jpt.database.model.User;
+import com.serezka.jpt.database.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
