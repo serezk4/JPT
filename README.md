@@ -3,7 +3,7 @@
 ## How to use?
 
 #### get repository
-> git clone https://github.com/serezk4/JPT.git \
+> git clone https://github.com/serezk4/JPT.git 
 
 #### set-up your config at folder src/main/resources/...:
 > application.properties\
