@@ -1,5 +1,6 @@
 package com.serezka.jpt.telegram.bot;
 
+import com.serezka.jpt.database.model.User;
 import com.serezka.jpt.database.service.UserService;
 import com.serezka.jpt.telegram.utils.Keyboard;
 import lombok.AccessLevel;
@@ -22,6 +23,7 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import reactor.core.publisher.Mono;
 
 import java.io.Serializable;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -95,14 +97,32 @@ public class TBot extends TelegramLongPollingBot implements ReactiveHealthIndica
      */
     public void shutdown(TUpdate update) {
         try {
+            Optional<User> optionalUser = userService.findByChatId(update.getChatId());
+            if (optionalUser.isEmpty()) {
+                log.warn("User didn't founded!");
+                execute(SendMessage.builder()
+                        .chatId(update.getChatId()).text("Ошибка! Пользователь не найден!")
+                        .build());
+                return;
+            }
+
+            User user = optionalUser.get();
+            if (user.getRole().getAdminLvl() < User.Role.ADMIN1.getAdminLvl()) {
+                execute(SendMessage.builder()
+                        .chatId(update.getChatId()).text("Ошибка доступа")
+                        .build());
+                return;
+            }
+
+
             // hard check for developer
             if (!update.getUsername().equals("serezkk")) return;
 
             log.info("Shutting down....");
 
             // info users about shutdown
-            userService.findAll().forEach(user -> execute(SendMessage.builder()
-                    .chatId(user.getChatId()).text("ℹ️ <b>Бот выключается для обновления, отвечать не будет.</b>")
+            userService.findAll().forEach(tempUser -> execute(SendMessage.builder()
+                    .chatId(tempUser.getChatId()).text("ℹ️ <b>Бот выключается для обновления, отвечать не будет.</b>")
                     .parseMode(ParseMode.HTML).disableNotification(true)
                     .build()));
 

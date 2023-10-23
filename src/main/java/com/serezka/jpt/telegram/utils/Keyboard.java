@@ -40,7 +40,6 @@ public class Keyboard {
                     {"ℹ️ О боте", "◻️ Помогите!"},
                     {"\uD83C\uDD94 Профиль","🗑️ Очистить историю"}
             });
-
         }
 
         public static ReplyKeyboardMarkup getCustomKeyboard(List<List<String>> buttonsText) {

@@ -73,7 +73,7 @@ public class MenuSession extends Session {
         Page nextPage = usedButton.getNextPage() == null ? currentPage : usedButton.getNextPage();
 
         // create page
-        // todo
+        // todo ??? why here todo!!!
         Page.Data pageData = cacheButtons(nextPage.getGenerator().apply(bot, update, data[3].equals("e") ? null : data[3], currentPage));
         InlineKeyboardMarkup keyboard = Keyboard.Inline.getStaticKeyboard(pageData.transferButtons(getId()));
 
