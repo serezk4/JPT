@@ -1,6 +1,6 @@
-package com.serezka.jpt.database.repository.authorization;
+package com.serezka.jpt.database.repository;
 
-import com.serezka.jpt.database.model.authorization.Invite;
+import com.serezka.jpt.database.model.Invite;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

@@ -1,9 +1,9 @@
 package com.serezka.jpt.telegram.bot;
 
 import com.serezka.jpt.api.GPTUtil;
-import com.serezka.jpt.database.model.authorization.User;
-import com.serezka.jpt.database.service.authorization.InviteService;
-import com.serezka.jpt.database.service.authorization.UserService;
+import com.serezka.jpt.database.model.User;
+import com.serezka.jpt.database.service.InviteService;
+import com.serezka.jpt.database.service.UserService;
 import com.serezka.jpt.telegram.commands.Command;
 import com.serezka.jpt.telegram.sessions.manager.MenuManager;
 import com.serezka.jpt.telegram.sessions.manager.StepManager;
@@ -18,6 +18,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
+import org.jetbrains.annotations.Nullable;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Controller;
 import org.telegram.telegrambots.meta.api.methods.GetFile;
@@ -29,8 +30,10 @@ import org.telegram.telegrambots.meta.api.objects.Document;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -66,7 +69,7 @@ public class THandler {
         commands.add(command);
     }
 
-    public void process(TBot bot, TUpdate update) throws Exception {
+    public void process(TBot bot, TUpdate update) {
         // -> validate query
         if (!TSettings.availableQueryTypes.contains(update.getQueryType())) {
             bot.execute(SendMessage.builder()
@@ -80,7 +83,150 @@ public class THandler {
         final String text = new String(update.getText().getBytes(), StandardCharsets.UTF_8);
         final TUpdate.QueryType queryType = update.getQueryType();
 
-        log.info(String.format("New Message: chatId[%s] username[%s] message[%s] | QType: %s", chatId, username, text, queryType.toString()));
+        log.info(String.format("new message from chatId[%s] username[%s] with text [message[%s]] | QType: %s", chatId, username, text, queryType.toString()));
+
+        if (checkAuth(bot, update)) return;
+
+        User user = getUser(bot, chatId, username);
+        if (Optional.ofNullable(user).isEmpty()) return;
+
+        // check for step & menu manager
+        if (stepManager.containsSession(chatId) && queryType != TUpdate.QueryType.INLINE_QUERY) {
+            stepManager.getSession(chatId).next(bot, update);
+            return;
+        }
+
+        if (menuManager.containsSession(chatId) && update.getSelf().hasCallbackQuery() && text.split("\\" + Keyboard.Delimiter.SERVICE)[1].matches("\\d+")) {
+            menuManager.getSession(chatId, Long.parseLong(text.split("\\" + Keyboard.Delimiter.SERVICE)[1])).ifPresent(menuSession -> menuSession.next(bot, update));
+            return;
+        }
+
+        Optional<Command<? extends Session>> optionalSelectedCommand = commands.stream()
+                .filter(command -> command.getNames().contains(text))
+                .findFirst();
+
+        // if command didn't find -> get gpt answer
+        if (optionalSelectedCommand.isEmpty()) {
+            generateAnswer(bot, update, user, chatId, text);
+            return;
+        }
+
+        // get selected command
+        Command<? extends Session> selectedCommand = optionalSelectedCommand.get();
+        Session session = selectedCommand.createSession();
+
+        // add to session manager
+        if (session instanceof MenuSession) menuManager.addSession((MenuSession) session, chatId);
+        if (session instanceof StepSession) stepManager.addSession((StepSession) session, chatId);
+
+        // run session
+        session.next(bot, update);
+    }
+
+    private void generateAnswer(TBot bot, TUpdate update, User user, long chatId, String text) {
+        try {
+            // anti-spam system
+            if (antiSpam.isSpam(user) && !update.getSelf().hasCallbackQuery()) {
+                bot.execute(SendMessage.builder()
+                        .chatId(chatId).text("\uD83D\uDE21 *Не спамь!*")
+                        .parseMode(ParseMode.MARKDOWN)
+                        .build());
+                return;
+            }
+
+            List<String> error = new ArrayList<>();
+
+            String fileData = getFileData(bot, update);
+
+            final int prepareMessageId = bot.execute(SendMessage.builder()
+                    .chatId(chatId).text("⌛ _Генерирую ответ..._")
+                    .parseMode(ParseMode.MARKDOWN).build()).getMessageId();
+
+            String gptAnswer = gptUtil.completeQuery(chatId,
+                    text + Optional.ofNullable(fileData).orElse(""),
+                    GPTUtil.Formatting.TEXT);
+
+            if (text.length() > 5000)
+                error.add("*Запрос слишком длинный и не будет сохранен в историю*");
+
+            System.out.println(gptAnswer);
+
+            if (gptAnswer.contains("자세한 내용이 필요합니다")) {
+                bot.execute(SendMessage.builder()
+                        .text("""
+                                *Возможные проблемы с ответом:*
+                                                                
+                                1️⃣ *Данный тип файла* не поддерживается!
+                                2️⃣ Очистите *историю* - /clh
+                                3️⃣ Вы ввели какое-то сообщение, текст которого не проходит цензуру бота
+                                                                
+                                `Если проблема останется - напишите` *@serezkk*
+                                """)
+                        .chatId(chatId).parseMode(ParseMode.MARKDOWN)
+                        .build());
+            }
+
+            boolean isNull = bot.execute(SendMessage.builder()
+                    .chatId(chatId).text(error.stream().map(s -> "⁉️ " + s + "\n\n").collect(Collectors.joining()) + "\uD83D\uDCAC " + gptAnswer)
+                    .replyToMessageId(update.getMessageId())
+                    .parseMode(ParseMode.MARKDOWN)
+                    .build()) == null;
+
+            if (isNull) {
+                bot.execute(SendDocument.builder()
+                        .chatId(chatId)
+                        .document(new InputFile(new ByteArrayInputStream(("т.к. Telegram не может отобразить данный ответ, он в файле:\n\n" + gptAnswer)
+                                .getBytes(StandardCharsets.UTF_8)), "answer.txt"))
+                        .replyToMessageId(update.getMessageId())
+                        .caption("\uD83D\uDCC1 <b>Из-за ограничений телеграма ответ в файле.</b>").parseMode(ParseMode.HTML)
+                        .replyMarkup(Keyboard.Reply.DEFAULT)
+                        .build());
+            }
+
+            bot.execute(DeleteMessage.builder()
+                    .chatId(chatId).messageId(prepareMessageId)
+                    .build());
+        } catch (Exception e) {
+            log.warn("Exception when generating answer: {}", e.getMessage());
+        }
+    }
+
+    @Nullable
+    private static String getFileData(TBot bot, TUpdate update) throws IOException, URISyntaxException {
+        String fileData = null;
+        if (update.getSelf().hasMessage() && update.getSelf().getMessage().hasDocument()) {
+            Document document = update.getSelf().getMessage().getDocument();
+
+            String fileUrl = bot.execute(new GetFile(document.getFileId())).getFileUrl(bot.getBotToken());
+            InputStream fileIs = new URI(fileUrl).toURL().openStream();
+
+            fileData = "\n[document]\n" + Read.getData(fileIs, fileUrl);
+        }
+        return fileData;
+    }
+
+    @Nullable
+    private User getUser(TBot bot, long chatId, String username) {
+        Optional<User> optionalUser = userService.findByChatId(chatId);
+        if (optionalUser.isEmpty()) { // check if returned user is present
+            log.warn("User exception (can't find or create) | {} : {}", username, chatId);
+            bot.execute(SendMessage.builder()
+                    .chatId(chatId).text("*Проблемы с сервисами БД*\nНапишите *@serezkk* для устранения проблемы.")
+                    .parseMode(ParseMode.MARKDOWN).build());
+            return null;
+        }
+
+        // add user to authorized list
+        authorized.add(chatId);
+
+        // get user
+        return optionalUser.get();
+    }
+
+    private boolean checkAuth(TBot bot, TUpdate update) {
+        final long chatId = update.getChatId();
+        final String username = update.getUsername();
+        final String text = update.getText();
 
         // check auth
         if (!authorized.contains(chatId) && !userService.existsByUsernameOrChatId(username, chatId) && !inviteService.existsByCode(text)) {
@@ -89,7 +235,7 @@ public class THandler {
                     .parseMode(ParseMode.MARKDOWN)
                     .build());
 
-            return;
+            return true;
         }
 
         if (!authorized.contains(chatId) && !userService.existsByUsernameOrChatId(username, chatId)) {
@@ -118,123 +264,11 @@ public class THandler {
                     .parseMode(ParseMode.MARKDOWN).build());
 
             // save user to database
-            userService.save(new User(chatId, username));
+            userService.save(new User(chatId, username, 0L /*TODO*/));
 
-            return;
+            return true;
         }
-
-        // get optional user
-        Optional<User> optionalUser = userService.findByChatId(chatId);
-        if (optionalUser.isEmpty()) { // check if returned user is present
-            log.warn("User exception (can't find or create) | {} : {}", username, chatId);
-            bot.execute(SendMessage.builder()
-                    .chatId(chatId).text("*Проблемы с сервисами БД*\nНапишите *@serezkk* для устранения проблемы.")
-                    .parseMode(ParseMode.MARKDOWN).build());
-            return;
-        }
-
-        // add user to authorized list
-        authorized.add(chatId);
-
-        // get user
-        User user = optionalUser.get();
-
-        // check for step & menu manager
-        if (stepManager.containsSession(chatId) && queryType != TUpdate.QueryType.INLINE_QUERY) {
-            stepManager.getSession(chatId).next(bot, update);
-            return;
-        }
-
-        if (menuManager.containsSession(chatId) && update.getSelf().hasCallbackQuery() && text.split("\\" + Keyboard.Delimiter.SERVICE)[1].matches("\\d+")) {
-            menuManager.getSession(chatId, Long.parseLong(text.split("\\" + Keyboard.Delimiter.SERVICE)[1])).ifPresent(menuSession -> menuSession.next(bot, update));
-            return;
-        }
-
-        Optional<Command<? extends Session>> optionalSelectedCommand = commands.stream()
-                .filter(command -> command.getNames().contains(text))
-                .findFirst();
-
-        if (optionalSelectedCommand.isEmpty()) {
-            // anti-spam system
-            if (antiSpam.isSpam(user) && !update.getSelf().hasCallbackQuery()) {
-                bot.execute(SendMessage.builder()
-                        .chatId(chatId).text("\uD83D\uDE21 *Не спамь!*")
-                        .parseMode(ParseMode.MARKDOWN)
-                        .build());
-                return;
-            }
-
-            // todo maybe remove list and replace with string
-            List<String> error = new ArrayList<>();
-
-            String fileData = null;
-            if (update.getSelf().hasMessage() && update.getSelf().getMessage().hasDocument()) {
-                Document document = update.getSelf().getMessage().getDocument();
-
-                String fileUrl = bot.execute(new GetFile(document.getFileId())).getFileUrl(bot.getBotToken());
-                InputStream fileIs = new URI(fileUrl).toURL().openStream();
-
-                fileData = "\n[document]\n" + Read.getData(fileIs, fileUrl);
-            }
-
-            int prepareMessageId = bot.execute(SendMessage.builder()
-                    .chatId(chatId).text("⌛ _Генерирую ответ..._")
-                    .parseMode(ParseMode.MARKDOWN).build()).getMessageId();
-
-            String gptAnswer = gptUtil.completeQuery(chatId,
-                    text + Optional.ofNullable(fileData).orElse(""),
-                    GPTUtil.Formatting.TEXT);
-
-            if (text.length() > 5000)
-                error.add("*Запрос слишком длинный и не будет сохранен в историю*");
-
-            if (gptAnswer.contains("자세한 내용이 필요합니다")) {
-                bot.execute(SendMessage.builder()
-                        .text("""
-                                *Возможные проблемы с ответом:*
-                                                                
-                                1️⃣ <b>Данный тип файла* не поддерживается!
-                                2️⃣ Очистите *историю* - /clh
-                                                                
-                                `Если проблема останется - напишите` *@serezkk*
-                                """)
-                        .chatId(chatId).parseMode(ParseMode.MARKDOWN)
-                        .build());
-            }
-
-            boolean isNull = bot.execute(SendMessage.builder()
-                    .chatId(chatId).text(error.stream().map(s -> "⁉️ " + s + "\n\n").collect(Collectors.joining()) + "\uD83D\uDCAC " + gptAnswer)
-                    .replyToMessageId(update.getMessageId())
-                    .parseMode(ParseMode.MARKDOWN)
-                    .build()) == null;
-
-            if (isNull) {
-                bot.execute(SendDocument.builder()
-                        .chatId(chatId)
-                        .document(new InputFile(new ByteArrayInputStream(("т.к. Telegram не может отобразить данный ответ, он в файле:\n\n" + gptAnswer)
-                                .getBytes(StandardCharsets.UTF_8)), "answer.txt"))
-                        .replyToMessageId(update.getMessageId())
-                        .caption("\uD83D\uDCC1 <b>Из-за ограничений телеграма ответ в файле.</b>").parseMode(ParseMode.HTML)
-                        .replyMarkup(Keyboard.Reply.DEFAULT)
-                        .build());
-            }
-
-            bot.execute(DeleteMessage.builder()
-                    .chatId(chatId).messageId(prepareMessageId)
-                    .build());
-            return;
-        }
-
-        // get selected command
-        Command<? extends Session> selectedCommand = optionalSelectedCommand.get();
-        Session session = selectedCommand.createSession();
-
-        // add to session manager
-        if (session instanceof MenuSession) menuManager.addSession((MenuSession) session, chatId);
-        if (session instanceof StepSession) stepManager.addSession((StepSession) session, chatId);
-
-        // run session
-        session.next(bot, update);
+        return false;
     }
 
     @Deprecated // for this bot

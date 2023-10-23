@@ -1,4 +1,4 @@
-package com.serezka.jpt.database.model.authorization;
+package com.serezka.jpt.database.model;
 
 import jakarta.persistence.*;
 import lombok.*;

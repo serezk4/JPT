@@ -1,6 +1,6 @@
 package com.serezka.jpt.telegram.bot;
 
-import com.serezka.jpt.database.service.authorization.UserService;
+import com.serezka.jpt.database.service.UserService;
 import com.serezka.jpt.telegram.utils.Keyboard;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -9,6 +9,8 @@ import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.actuate.health.Health;
+import org.springframework.boot.actuate.health.ReactiveHealthIndicator;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -17,6 +19,7 @@ import org.telegram.telegrambots.meta.api.methods.ParseMode;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+import reactor.core.publisher.Mono;
 
 import java.io.Serializable;
 import java.util.concurrent.ExecutorService;
@@ -28,7 +31,7 @@ import java.util.concurrent.TimeUnit;
 @Log4j2
 @Getter
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class TBot extends TelegramLongPollingBot {
+public class TBot extends TelegramLongPollingBot implements ReactiveHealthIndicator {
     String botUsername, botToken;
 
     @NonFinal @Setter
@@ -36,6 +39,9 @@ public class TBot extends TelegramLongPollingBot {
 
     ExecutorService executor;
     UserService userService;
+
+    @NonFinal
+    long queriesHandled=0;
 
     public TBot(@Value("${telegram.bot.username}") String botUsername,
                 @Value("${telegram.bot.token}") String botToken,
@@ -49,11 +55,20 @@ public class TBot extends TelegramLongPollingBot {
         this.userService = userService;
     }
 
+    private Mono<Health> getInfo() {
+        return Mono.just(new Health.Builder()
+                .up()
+                .withDetail("queries handled", queriesHandled)
+                .build());
+    }
+
+
     @Override
     public void onUpdateReceived(Update update) {
         TUpdate tupdate = new TUpdate(update);
 
         log.info("[NEW] Update");
+        ++queriesHandled;
 
         // if executor is shutting down or terminated we can't process queries
         if (executor.isShutdown() || executor.isTerminated()) {
@@ -135,7 +150,7 @@ public class TBot extends TelegramLongPollingBot {
 
             if (method instanceof SendMessage parsed) {
                 if (parsed.getReplyMarkup() == null)
-                    parsed.setReplyMarkup(Keyboard.Reply.getDefault());
+                    parsed.setReplyMarkup(Keyboard.Reply.DEFAULT);
 
                 log.info(String.format("Message Sent: to {%s} with text {'%s'}",
                         parsed.getChatId(), parsed.getText().replace("\n", " ")));
@@ -146,5 +161,12 @@ public class TBot extends TelegramLongPollingBot {
             log.warn("Error method execution: {}", e.getMessage());
             return null;
         }
+    }
+
+    @Override
+    public Mono<Health> health() {
+        return getInfo().onErrorResume(
+                ex -> Mono.just(new Health.Builder().down(ex).build())
+        );
     }
 }

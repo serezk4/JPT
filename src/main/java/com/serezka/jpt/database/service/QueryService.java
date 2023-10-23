@@ -1,7 +1,7 @@
-package com.serezka.jpt.database.service.gpt;
+package com.serezka.jpt.database.service;
 
-import com.serezka.jpt.database.model.gpt.Query;
-import com.serezka.jpt.database.repository.gpt.QueryRepository;
+import com.serezka.jpt.database.model.Query;
+import com.serezka.jpt.database.repository.QueryRepository;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;

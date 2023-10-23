@@ -1,13 +1,12 @@
 package com.serezka.jpt.telegram.commands.admin;
 
 import com.github.f4b6a3.uuid.UuidCreator;
-import com.serezka.jpt.database.model.authorization.Invite;
-import com.serezka.jpt.database.model.authorization.User;
-import com.serezka.jpt.database.service.authorization.InviteService;
+import com.serezka.jpt.database.model.Invite;
+import com.serezka.jpt.database.model.User;
+import com.serezka.jpt.database.service.InviteService;
 import com.serezka.jpt.telegram.bot.TBot;
 import com.serezka.jpt.telegram.bot.TUpdate;
 import com.serezka.jpt.telegram.commands.Command;
-import com.serezka.jpt.telegram.sessions.types.menu.Page;
 import com.serezka.jpt.telegram.sessions.types.step.Step;
 import com.serezka.jpt.telegram.sessions.types.step.StepSession;
 import lombok.AccessLevel;

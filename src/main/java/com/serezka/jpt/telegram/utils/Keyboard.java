@@ -1,6 +1,5 @@
 package com.serezka.jpt.telegram.utils;
 
-import com.serezka.jpt.database.model.authorization.User;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -34,19 +33,12 @@ public class Keyboard {
     }
 
     public static class Reply {
-        public static final ReplyKeyboardMarkup DEFAULT = getCustomKeyboard(new String[][]{
-                {"ℹ️ О боте", "◻️ Помогите!"},
-                {"⚙️ Настройки чата","🗑️ Очистить историю"}
-        });
+        public static final ReplyKeyboardMarkup DEFAULT = getDefault();
 
         public static ReplyKeyboardMarkup getDefault() {
-            return getDefault(User.BotMode.COMMANDS);
-        }
-
-        public static ReplyKeyboardMarkup getDefault(User.BotMode botMode) {
             return getCustomKeyboard(new String[][]{
                     {"ℹ️ О боте", "◻️ Помогите!"},
-                    {"⚙️ Настройки чата","🗑️ Очистить историю"}
+                    {"\uD83C\uDD94 Профиль","🗑️ Очистить историю"}
             });
 
         }

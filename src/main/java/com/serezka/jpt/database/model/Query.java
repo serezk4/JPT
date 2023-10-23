@@ -1,4 +1,4 @@
-package com.serezka.jpt.database.model.gpt;
+package com.serezka.jpt.database.model;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -9,9 +9,7 @@ import java.time.LocalDate;
 @Entity
 @Table(name = "queries")
 @NoArgsConstructor
-@Getter
-@Setter
-@ToString
+@Getter @Setter @ToString
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Query {
     @Id

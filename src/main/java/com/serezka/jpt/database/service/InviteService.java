@@ -1,12 +1,12 @@
-package com.serezka.jpt.database.service.authorization;
+package com.serezka.jpt.database.service;
 
-import com.serezka.jpt.database.model.authorization.Invite;
+import com.serezka.jpt.database.model.Invite;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
-import com.serezka.jpt.database.repository.authorization.InviteRepository;
+import com.serezka.jpt.database.repository.InviteRepository;
 
 @Service
 @RequiredArgsConstructor

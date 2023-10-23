@@ -1,6 +1,6 @@
 package com.serezka.jpt.telegram.commands.admin;
 
-import com.serezka.jpt.database.model.authorization.User;
+import com.serezka.jpt.database.model.User;
 import com.serezka.jpt.telegram.bot.TBot;
 import com.serezka.jpt.telegram.bot.TUpdate;
 import com.serezka.jpt.telegram.commands.Command;

@@ -1,6 +1,6 @@
-package com.serezka.jpt.database.repository.gpt;
+package com.serezka.jpt.database.repository;
 
-import com.serezka.jpt.database.model.gpt.Query;
+import com.serezka.jpt.database.model.Query;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
