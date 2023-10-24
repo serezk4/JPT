@@ -121,6 +121,8 @@ public class THandler {
 
         // run session
         session.next(bot, update);
+
+        System.gc();
     }
 
     private void generateAnswer(TBot bot, TUpdate update, User user, long chatId, String text) {
