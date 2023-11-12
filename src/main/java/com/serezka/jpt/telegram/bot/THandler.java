@@ -230,15 +230,15 @@ public class THandler {
         final String username = update.getUsername();
         final String text = update.getText();
 
-        // check auth
-        if (!authorized.contains(chatId) && !userService.existsByUsernameOrChatId(username, chatId) && !inviteService.existsByCode(text)) {
-            bot.execute(SendMessage.builder()
-                    .chatId(chatId).text("*Вы еще не авторизовались в боте.*\n_Введите токен, который вы получили:_")
-                    .parseMode(ParseMode.MARKDOWN)
-                    .build());
-
-            return true;
-        }
+//        // check auth
+//        if (!authorized.contains(chatId) && !userService.existsByUsernameOrChatId(username, chatId) && !inviteService.existsByCode(text)) {
+//            bot.execute(SendMessage.builder()
+//                    .chatId(chatId).text("*Вы еще не авторизовались в боте.*\n_Введите токен, который вы получили:_")
+//                    .parseMode(ParseMode.MARKDOWN)
+//                    .build());
+//
+//            return true;
+//        }
 
         if (!authorized.contains(chatId) && !userService.existsByUsernameOrChatId(username, chatId)) {
             // if user entered token we will message him about it and add new row in database

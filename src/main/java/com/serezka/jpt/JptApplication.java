@@ -1,11 +1,9 @@
 package com.serezka.jpt;
 
 import com.serezka.jpt.telegram.commands.admin.*;
-import com.serezka.jpt.telegram.commands.user.ClearHistory;
-import com.serezka.jpt.telegram.commands.user.Github;
-import com.serezka.jpt.telegram.commands.user.HelpMe;
-import com.serezka.jpt.telegram.commands.user.Profile;
+import com.serezka.jpt.telegram.commands.user.*;
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.boot.ApplicationArguments;
@@ -16,11 +14,16 @@ import com.serezka.jpt.telegram.bot.*;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 
+import java.time.LocalDateTime;
+
 
 @SpringBootApplication
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class JptApplication implements ApplicationRunner {
+    @Getter
+    private static final LocalDateTime startTime = LocalDateTime.now();
+
     // bot stuff
     THandler tHandler;
     TBot tBot;
@@ -32,6 +35,7 @@ public class JptApplication implements ApplicationRunner {
     Github github;
     HelpMe helpMe;
     ClearHistory clearHistory;
+    Status status;
 
     // admin
     GetQueries getQueries;
@@ -52,6 +56,7 @@ public class JptApplication implements ApplicationRunner {
         tHandler.addCommand(github);
         tHandler.addCommand(helpMe);
         tHandler.addCommand(clearHistory);
+        tHandler.addCommand(status);
 
         tHandler.addCommand(getQueries);
         tHandler.addCommand(getUsers);

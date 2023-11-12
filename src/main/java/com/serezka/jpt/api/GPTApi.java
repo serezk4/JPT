@@ -36,6 +36,8 @@ public class GPTApi {
         Query query = new Query(messages, temperature);
         HttpPost httpPost = getHttpPost(String.format("%s/getAnswer", url), getStringEntity(gson.toJson(query)));
 
+        System.out.println(httpPost.getURI().toString());
+
         CloseableHttpClient httpClient = HttpClientBuilder.create().build();
         CloseableHttpResponse response = httpClient.execute(httpPost);
         String result = IOUtils.toString(response.getEntity().getContent(), Charset.defaultCharset());
